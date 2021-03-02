@@ -60,7 +60,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                Title
 
-\title{Simple and fast glyph rendering scheme for HARDI DWI acquisitions}
+\title{Fast polygon-based glyph rendering scheme for HARDI DWI acquisitions}
 
 \author{
 \parbox{0.25\textwidth}{\centering
@@ -171,41 +171,67 @@ medical visualization, HARDI, computer graphics, visualization.
 
 \copyrightspace
 
-Diffusion\textcolor{blue}{-}weighted magnetic resonance imaging (DW-MRI) is a technique that aims to measure the random Brownian motion of water molecules. Applied to the brain, it is unique \sout{on}\textcolor{blue}{in} providing in-vivo information on \textcolor{blue}{the} white matter path. Imaging methods to synthesize the diffusion signals into functions have been a \sout{subject of research}\textcolor{blue}{research subject} \textcolor{blue}{for} more than two decades.
+Diffusion-weighted magnetic resonance imaging (DW-MRI) is a technique that aims to measure the random Brownian motion of water molecules. Applied to the brain, it is unique in providing in-vivo information on the white matter path. Imaging methods to synthesize the diffusion signals into functions have been a research subject for more than two decades.
 
-The first and the most used \sout{on}\textcolor{blue}{in the} clinic is the diffusion tensor imaging (DTI) \cite{Basser1994}, which aims to fit a set of diffusion coefficients samples into a \sout{g}\textcolor{blue}{G}aussian 3D model\sout{,} of average zero\textcolor{blue}{,} and the diffusion tensor is \todo{Covariance matrix to eigensystem?}the covariance matrix.
+The first and the most applied method in the clinical area is diffusion tensor imaging (DTI) \cite{Basser1994}. The method aims to fit a set of diffusion signal samples into a Gaussian 3D model.%, of average zero, and the diffusion tensor is the covariance matrix.
 
-The limitations of DTI are well known \cite{descoteaux2015,SCHILLING2019194}. The \sout{gaussian assumption}\textcolor{blue}{Gaussian distribution} fits well the diffusion behavior when the point represents a \textcolor{blue}{brain} region \sout{of the brain} that \textcolor{blue}{only} one fiber passes through it\sout{, but}\textcolor{blue}{But,} the model is limited when \sout{it comes to describe}\textcolor{blue}{describing} the diffusion in areas \sout{that have}\textcolor{blue}{with} fibers \sout{with a}\textcolor{blue}{of} more complex behavior (\sout{ie.}\textcolor{blue}{i.e.,} fiber crossing, branching, kissing). This limitation \sout{affects} critically \textcolor{blue}{affects} the accuracy \sout{on}\textcolor{blue}{of} inferring the fiber distribution in the brain.
+The limitations of DTI are well known \cite{descoteaux2015,SCHILLING2019194}. The Gaussian assumption fits well the diffusion behavior in points that have only one underlying fiber. However, it fails to model regions with multiple fibers and more complex behavior (i.e., fiber crossing, branching, kissing, merging). This limitation critically affects the accuracy of the extraction of the underlying fiber distribution.
 
-\sout{To overcome the limitation of the gaussian model assumption, m}\textcolor{blue}{M}ore advanced imaging methods for diffusion were introduced \textcolor{blue}{to overcome the limitation of the Gaussian model}. These methods require more samples on the DWI \textcolor{blue}{acquisitions} than \textcolor{blue}{those applied } \sout{the acquisitions used} on DTI\sout{ and t}\textcolor{blue}{. T}hese acquisitions \sout{were labeled as}\textcolor{blue}{are called} High Angular Resolution Diffusion Imaging (HARDI). While the amount of diffusion-weighted acquisitions used on DTI vary between 6 and \todo{For very special cases ...}32, HARDI acquisitions have \todo{In competitions less number of acquisitions were applied ...}more than 45 \cite{descoteaux2015}.
+%The limitations of DTI are well known \cite{descoteaux2015,SCHILLING2019194}. The \sout{gaussian assumption}\textcolor{blue}{Gaussian distribution} fits well the diffusion behavior when the point represents a \textcolor{blue}{brain} region \sout{of the brain} that \textcolor{blue}{only} one fiber passes through it\sout{, but}\textcolor{blue}{But,} the model is limited when \sout{it comes to describe}\textcolor{blue}{describing} the diffusion in areas \sout{that have}\textcolor{blue}{with} fibers \sout{with a}\textcolor{blue}{of} more complex behavior (\sout{ie.}\textcolor{blue}{i.e.,} fiber crossing, branching, kissing). This limitation \sout{affects} critically \textcolor{blue}{affects} the accuracy \sout{on}\textcolor{blue}{of} inferring the fiber distribution in the brain.
 
-\sout{These advanced methods that requires a HARDI acquisition, which will be called in this work as HARDI methods, aims to reconstruct} \textcolor{blue}{Tuch showed that when the angular acquisitions are uniform, one can synthesize from the samples} an orientation distribution function (ODF) that represents the diffusion process. \sout{Some of them are}\textcolor{blue}{This function is} model-free\sout{, which}\textcolor{blue}{It} estimates the diffusion displacement from the Fourier relation between the DW-MRI signal to its respective diffusion displacement \cite{TuchQBall2004, wedeen2005,  yeh2010}\sout{ and others are}\textcolor{blue}{Tournier presented a} model-based \textcolor{blue}{approach}\todo{It is not clear the underlying model! FOD, fiber orientation density???}\textcolor{red}{, where they model the underlying fiber signal obtained by its respective decay on the diffusion acquisition \cite{tournier2007}.}
+More advanced imaging methods for diffusion were introduced to overcome the limitation of the Gaussian model. These methods require more samples on the DWI acquisitions than those applied on DTI. These acquisitions are called High Angular Resolution Diffusion Imaging (HARDI). While the amount of diffusion-weighted acquisitions used on DTI vary between 6 and 32, HARDI acquisitions have more than 45 \cite{descoteaux2015}.
 
-An ODF consists in an association of a set of directions, each one of \sout{them}\textcolor{blue}{which} \textcolor{blue}{is} represented by a unity vector $\bm{u}$, to a scalar $\psi(\bm{u})$. The most common approach to represent an ODF by a glyph is through the spherical polar plot. In this category of a glyph, a \todo{Reference to normalized ODF}normalized \sout{version of the} ODF deforms a sphere accordingly to \sout{the equation}\textcolor{blue}{Eq.} \ref{eq::normglifo}:
+%\sout{To overcome the limitation of the gaussian model assumption, m}\textcolor{blue}{M}ore advanced imaging methods for diffusion were introduced \textcolor{blue}{to overcome the limitation of the Gaussian model}. These methods require more samples on the DWI \textcolor{blue}{acquisitions} than \textcolor{blue}{those applied } \sout{the acquisitions used} on DTI\sout{ and t}\textcolor{blue}{. T}hese acquisitions \sout{were labeled as}\textcolor{blue}{are called} High Angular Resolution Diffusion Imaging (HARDI). While the amount of diffusion-weighted acquisitions used on DTI vary between 6 and \todo{For very special cases ...}32, HARDI acquisitions have \todo{In competitions less number of acquisitions were applied ...}more than 45 \cite{descoteaux2015}.
+
+The most common method to visualize HARDI data through these advanced imaging methods is by spherical polar plot glyphs. These methods are represented by orientation distribution functions (ODF), which consists of an association of a set of directions, represented by unit vectors, to a set of scalars that represents the diffusivity for each element in the domain.
+
+The spherical polar plot consists of the modulation of a sphere surface, where its radius points are scaled to its ODF values. To emphasize the orientational structure, it is useful to generate the glyphs using a min-max normalized version of the ODF \cite{TuchQBall2004}, as illustrated in Fig. \ref{fig::intro_glyph}. The min-max normalization is defined in Eq. \ref{eq::normglifo}
+
+\begin{figure}[htb]
+    \centering
+    %\rule{6cm}{3cm}
+    \includegraphics[width=1.00\linewidth, angle=0]{figs/SphericalMeshModulation.png}
+    \caption{Glyphs obtained by modulating a sphere. The result in the upper right shows the glyph generated from its respective ODF. The image in the bottom right shows the glyph generated by a min-max normalized version of the ODF, which has a more pronounced orientational structure. The color scheme is describe in the equation \ref{eq::glyph_color}}
+    \label{fig::intro_glyph}
+\end{figure}
+
+%\sout{These advanced methods that requires a HARDI acquisition, which will be called in this work as HARDI methods, aims to reconstruct} \textcolor{blue}{Tuch showed that when the angular acquisitions are uniform, one can synthesize from the samples} an orientation distribution function (ODF) that represents the diffusion process. \sout{Some of them are}\textcolor{blue}{This function is} model-free\sout{, which}\textcolor{blue}{It} estimates the diffusion displacement from the Fourier relation between the DW-MRI signal to its respective diffusion displacement \cite{TuchQBall2004, wedeen2005,  yeh2010}\sout{ and others are}\textcolor{blue}{Tournier presented a} model-based \textcolor{blue}{approach}\todo{It is not clear the underlying model! FOD, fiber orientation density???}\textcolor{red}{, where they model the underlying fiber signal obtained by its respective decay on the diffusion acquisition \cite{tournier2007}.}
+
+%\sout{These advanced methods that requires a HARDI acquisition, which will be called in this work as HARDI methods, aims to reconstruct} \textcolor{blue}{Tuch showed that when the angular acquisitions are uniform, one can synthesize from the samples} an orientation distribution function (ODF) that represents the diffusion process. \sout{Some of them are}\textcolor{blue}{This function is} model-free\sout{, which}\textcolor{blue}{It} estimates the diffusion displacement from the Fourier relation between the DW-MRI signal to its respective diffusion displacement \cite{TuchQBall2004, wedeen2005,  yeh2010}\sout{ and others are}\textcolor{blue}{Tournier presented a} model-based \textcolor{blue}{approach}\todo{It is not clear the underlying model! FOD, fiber orientation density???}\textcolor{red}{, where they model the underlying fiber signal obtained by its respective decay on the diffusion acquisition \cite{tournier2007}.}
+
+%An ODF consists in an association of a set of directions, each one of \sout{them}\textcolor{blue}{which} \textcolor{blue}{is} represented by a unity vector $\bm{u}$, to a scalar $\psi(\bm{u})$. The most common approach to represent an ODF by a glyph is through the spherical polar plot. In this category of a glyph, a \todo{Reference to normalized ODF}normalized \sout{version of the} ODF deforms a sphere accordingly to \sout{the equation}\textcolor{blue}{Eq.} \ref{eq::normglifo}:
 
 \begin{equation}
 \label{eq::normglifo}
     R(\bm{u}) = \frac{\psi(\bm{u}) - min(\psi(\bm{u}))}{max(\psi(\bm{u})) - min(\psi(\bm{u}))}
 \end{equation}
 
-where $\bm{u}$ is an unity vector contained in the spherical domain and $R(\bm{u})$ is the radius of the spherical mesh.
+where $\bm{u}$ is a unity vector contained in the spherical domain, and $R(\bm{u})$ is the radius of the spherical mesh.
 
-\todo{Insert a figure to help in understanding.}These glyphs\textcolor{blue}{, as illustrated in Fig~\ref{???},} \sout{give}\textcolor{blue}{provide} a clear visualization of local \sout{information in} diffusion \sout{imaging methods} \textcolor{blue}{in each voxel}. \sout{It is used by} \todo{References?}Researchers use them to \todo{???}\textcolor{red}{assess the acquisition quality,} \sout{attest the validity of}\textcolor{blue}{validate} an imaging method, \sout{the adequability of it given an acquisition} and \sout{the} check the relationship between the \textcolor{blue}{applied} imaging method \sout{used with} \textcolor{blue}{and the} fiber reconstruction algorithms called tractography.
+These glyphs provide a clear visualization of local diffusion through its ODF samples. Researchers use them to validate an imaging method \cite{descoteaux2007_QBI,  TuchQBall2004,tournier2007,Tournier2004DirectEO, tuch2002,  yeh2010}, assess the local relationship between the acquisition quality, the imaging method, and the underlying fiber orientation distribution detected (FOD) \cite{descoteaux2007}. The FODs extracted from an imaging method applied to a DWI acquisition are used as input of fiber tracking algorithms. The conjecture of the brain connectivity from the DWI acquisitions motivates this research area's main motivation. %Inferring brain tracts from DWI acquisitions consists on the main motivation of the research in the area.
 
-\sout{The color scheme used in the glyph is a function of the direction from the center of the glyph to its surface,}\textcolor{blue}{Color can enhance the orientation information, making its spatial direction explicit. A simple color mapping is applied to highlight a diffusion vector $\bm{u}$ in three orthogonal directions, as} defined in \sout{the equation}\textcolor{blue}{Eq.} \ref{eq::glyph_color}. 
+%\todo{Insert a figure to help in understanding.}These glyphs\textcolor{blue}{, as illustrated in Fig~\ref{???},} \sout{give}\textcolor{blue}{provide} a clear visualization of local \sout{information in} diffusion \sout{imaging methods} \textcolor{blue}{in each voxel}. \sout{It is used by} \todo{References?}Researchers use them to \todo{???}\textcolor{red}{assess the acquisition quality,} \sout{attest the validity of}\textcolor{blue}{validate} an imaging method, \sout{the adequability of it given an acquisition} and \sout{the} check the relationship between the \textcolor{blue}{applied} imaging method \sout{used with} \textcolor{blue}{and the} fiber reconstruction algorithms called tractography.
+
+Color can enhance the orientation information, making its spatial direction explicit. A simple color mapping is applied to highlight a diffusion vector $\bm{u}$ in three orthogonal directions, as defined in Eq. \ref{eq::glyph_color}.
 
 \begin{equation}
 \label{eq::glyph_color}
     (r,g,b) = (|u_x|,|u_y|,|u_z|)
 \end{equation}
 
-The red color represents the mediolateral direction, \textcolor{blue}{the} green refers to the anteroposterior direction\textcolor{blue}{,} and the blue, inferior-superior direction. \sout{This color scheme is commonly used by t}\textcolor{blue}{T}he DWI community \textcolor{blue}{commonly uses this color scheme}.
+In the brain anatomical axes, the red color represents the mediolateral direction, the green refers to the anteroposterior direction, and the blue, inferior-superior direction. The DWI community commonly uses this color scheme.
 
 \todo[inline]{I suggest writing motivation to this work: the challenging remaining problems and the one you are supposed to solve.}
 
-In this work, we present a\textcolor{blue}{n interactive GPU-accelerated} rendering scheme \sout{that aims to, given samples of ODFs associated with a spherical mesh, we} \textcolor{blue}{to} render a set of spherical polar plot\textcolor{blue}{s from ODF samples}. \textcolor{blue}{Inspired by Voltoline and Wu's work, we applied instance rendering and transform feedback to reduce the CPU-GPU data traffic.}\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
+In this work, we present an interactive GPU-accelerated rendering scheme of multiple spherical polar plots from ODF samples. We applied instance rendering to reduce the CPU-GPU data traffic.%\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
 
-\todo{Redundant text. Instead, write the expected contribution.}\sout{The integration of this rendering scheme in a DW-MRI visualization can be a powerful tool to the researchers in the area. It improves the understanding of the output result of an diffusion imaging method applied to DW-MRI, as well as provide an a visual information of the underlying model where directional information of fibers is extracted to be used on brain fiber reconstruction. The real time factor can improve the visual interactivity of the research in the area.}
+%In this work, we present a\textcolor{blue}{n interactive GPU-accelerated} rendering scheme \sout{that aims to, given samples of ODFs associated with a spherical mesh, we} \textcolor{blue}{to} render a set of spherical polar plot\textcolor{blue}{s from ODF samples}. \textcolor{blue}{Inspired by Voltoline and Wu's work, we applied instance rendering and transform feedback to reduce the CPU-GPU data traffic.}\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
+
+This rendering scheme, integrated with visualization systems to diffusion images can be a powerful tool for researchers in the area to assess a set of local diffusion profiles and improve their understanding of advanced methods for diffusion imaging.
+
+This paper is divided in \ref{sec::conclusions} sections. In section \ref{sec::related_work}, we discuss the related works; in the section \ref{sec::odf_glyph_rendering} we discuss the rendering scheme, the data structures associated, an overview of the GPU shaders, and an optimization for symmetrical ODFs; in the section \ref{sec::results} we analyze the glyphs generated and show performance measurements. In the section \ref{sec::conclusions} we show the conclusions of the work.
+
+%\todo{Redundant text. Instead, write the expected contribution.}\sout{The integration of this rendering scheme in a DW-MRI visualization can be  It improves the understanding of the output result of an diffusion imaging method applied to DW-MRI, as well as provide an a visual information of the underlying model where directional information of fibers is extracted to be used on brain fiber reconstruction. The real time factor can improve the visual interactivity of the research in the area.}
 
 
 
@@ -216,60 +242,84 @@ In this work, we present a\textcolor{blue}{n interactive GPU-accelerated} render
 
 
 \section{Related work}
+\label{sec::related_work}
 
-\todo[inline]{You must show why the works are related to your work. Which aspects did you take advantage of in your work?}
+%\todo[inline]{You must show why the works are related to your work. Which aspects did you take advantage of in your work?}
 
-Polygons based \sout{HARDI} glyph rendering schemes is an area that has not been much explored by the \textcolor{blue}{HARDI} community. Shattuck et al. \sout{\cite{shattuck2008} showed results of a polygon based approach} \textcolor{blue}{presented} in \sout{his}\textcolor{blue}{their} work \textcolor{blue}{\cite{shattuck2008} the rendering of ODFs as spherical meshes of 225 vertices and 2 million triangles in 10 FPS.}\sout{ and, at that time, the result reported by them was 10 FPS when using a spherical mesh of 225 vertices, with 2 million triangles being rendered.} The authors \sout{do}\textcolor{blue}{did} not \sout{explain} detail\sout{ed} their rendering scheme\sout{ and imply that they were not programming the GPU. It is worth mentioning that instance rendering was not released back then}.
 
-Peeters et al. \cite{peeters2009} propose\textcolor{blue}{d} \sout{an approach using}\textcolor{blue}{to} ray-cast\sout{ing to render HARDI} \todo{to ray cast ODF or FOD into glyphs?}glyphs \textcolor{blue}{on the GPU}. \textcolor{red}{In their approach, the CPU-GPU data traffic for each glyph consists of coefficients of spherical harmonics for a GPU based ray casting algorithm. This approach was further improved until.......!!!} 
 
-\todo[inline]{It is important to cite Voltoline's work.}
+%Polygons based glyph rendering schemes is an area that has not been much explored by the HARDI community. Shattuck et al. \sout{\cite{shattuck2008} showed results of a polygon based approach} \textcolor{blue}{presented} in \sout{his}\textcolor{blue}{their} work \textcolor{blue}{\cite{shattuck2008} the rendering of ODFs as spherical meshes of 225 vertices and 2 million triangles in 10 FPS.}\sout{ and, at that time, the result reported by them was 10 FPS when using a spherical mesh of 225 vertices, with 2 million triangles being rendered.} The authors \sout{do}\textcolor{blue}{did} not \sout{explain} detail\sout{ed} their rendering scheme\sout{ and imply that they were not programming the GPU. It is worth mentioning that instance rendering was not released back then}.
+
+
+
+Polygons-based glyph rendering schemes are an area that has not been much explored by the HARDI community. Shattuck et al. \cite{shattuck2008} presented in their work the rendering of these glyphs but did not obtain interactive rates on rendering. The performance result reported by them were 10 FPS for a spherical mesh of 225 vertices and 2 million triangles being rendered. The authors did not detail their rendering scheme and did not take advantage of the GPU programming to improve it, as we show in this work.
+%ALGO RELEVANTE: ESSE TRABALHO DO SHATTUCK É O ÚLTIMO DA ÁREA QUE TEM ALGUMA COISA A VER COM O MEU, QUE É RENDERIZAR GLIFOS HARDI EM TREAL.
+
+
+% \sout{ and imply that they were not programming the GPU. It is worth mentioning that instance rendering was not released back then}.
+
+Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyphs as an alternative to the polygon-based approaches and achieved better performance results. In their approach, each glyph's CPU-GPU data traffic consists of coefficients of spherical harmonics for a GPU-based ray casting algorithm. This approach was further improved until.......!!!
+
+Voltoline et al. \cite{voltoline2021} proposed a real-time rendering scheme for a glyph representation of diffusion tensor called superquadrics \cite{Kindlmann2004}. In their work, they minimize the CPU-GPU data traffic to a few parameters that customize the glyphs in each drawing request using the instance rendering technique, obtaining state of art performance results. These results influenced us to apply this technique and adapt their results in our HARDI glyph rendering scheme.
+
+%\todo[inline]{It is important to cite Voltoline's work.}
 
 %\section{Rendering scheme}
 \section{ODF Glyph Rendering}
-\label{sec::rendering_scheme}
+\label{sec::odf_glyph_rendering}
 
-\todo[inline]{An overview of the proposal. It could be a flowchart}
+Our goal is to show the rendering scheme of the glyphs to be shown in the scene. The subsection \ref{ssec::precomputation} describes the procedures that must be done a priori; in the subsection \ref{ssec::datastruct}, we describe the input data structures that customize the glyphs and are the most part of the CPU-GPU data traffic, and in the subsection \ref{ssec::rendering}, we provide a summary of the CPU and GPU division of tasks and in \ref{ssec::optimization}, we discuss an optimization that can be done in symmetrical ODFs.
 
-\subsection{Precomputation on th CPU}
+%The input of the rendering scheme consists in two set of elements: the set positions in the scene and a set of ODF profiles that .
 
-\todo[inline]{What to be rendered? At least a paragraph explaining the objects to be rendered. Spheres deformed by ODFs?}
+%We divide the rendering scheme in precomputation and drawing request. The precomputation  refers to the part of the rendering scheme that is done at the beginning of scheme and only once, and the 
 
-\begin{enumerate}
-    \item Compute spherical mesh and its index buffer and send to GPU.
-    \item Compute matrix $\bm{\Psi}$ and send to GPU as a texture.
-\end{enumerate}
+%\todo[inline]{An overview of the proposal. It could be a flowchart}
 
-\subsection{Rendering on the GPU}
+\subsection{Precomputation on the CPU}
+\label{ssec::precomputation}
 
-\subsubsection{Vertex Shader}
-\begin{enumerate}
-    \item Lookup the coefficient that customize the glyphs and multiply by the spherical vertex;
-    \item perform translation of the glyph;
-    \item do scaling and camera related transformations;
-    \item compute color as a function of the spherical mesh vertex accordingly to equation \ref{eq::glyph_color} and send to fragment shader.
-\end{enumerate}
-\subsubsection{Fragment Shader}
-\begin{enumerate}
-    \item Set the output color as the rasterized color defined in the vertex shader.
-\end{enumerate}
+The glyphs consist of spheres with each one of its radius points deformed by its respective ODF value.
+
+The scheme's precomputation consists of setting a unit spherical mesh of N vertices centered in the origin and its respective index buffer and send to the GPU only once as an attribute to be instanced.
+
+
+
+%\todo[inline]{What to be rendered? At least a paragraph explaining the objects to be rendered. Spheres deformed by ODFs?}
+
+%\begin{enumerate}
+    %\item Compute spherical mesh and its index buffer and send to GPU.
+    %\item Compute matrix $\bm{\Psi}$ and send to GPU as a texture.
+%\end{enumerate}
+
 
 \subsection{Data Structures}
+\label{ssec::datastruct}
 
-The rendering scheme \sout{presented} consists of instantiating a \textcolor{blue}{unit radius} spherical mesh of N vertices centered on the origin and\sout{ unit radius, which is} sent to the GPU only once. \todo{Should the translation matrix and ODF be sent to the GPU?}\textcolor{red}{At each instance, the mesh is transformed by a translation matrix and its ODF samples.}
+Two elements customize each one of the glyphs: their position and their ODF samples. These elements are sent to the GPU in every draw request.
 
-The translation matrix \sout{positions}\textcolor{blue}{places} the center of the spherical mesh to \sout{its respective position}\textcolor{blue}{the center of the corresponding voxel}. The ODF samples represent the diffusion profile\textcolor{blue}{s} that are particular to each glyph. \sout{These which determines t}\textcolor{blue}{T}he \textcolor{blue}{glyph geometry}\sout{shape of the glyph} \textcolor{blue}{is reshaped} by multiplying the \textcolor{blue}{mesh normal $\bm{n}$} \sout{vertex of the mesh associated with the direction of diffusion} to \sout{its}\textcolor{blue}{the} ODF value \textcolor{blue}{whose diffusion direction is parallel to $\bm{n}$}.
+The translation matrix places the center of the spherical mesh to its corresponding position. The ODF samples represent the diffusion profiles that are particular to each glyph. The glyph geometry is reshaped by multiplying the mesh normal direction $\bm{n}$ to its respective ODF value $\Psi(\bm{n})$.
 
-\sout{In this rendering scheme, the set consisting of the translation matrices and the ODF profiles consists are sent from the CPU to the GPU in each drawing request. Hence, in order to achieve the goal of interactivity, it is desirable that the data traffic between both parts is as little as possible.}
+Due to the large amount of data sent to the GPU in the drawing requests, the goal of this subsection is to show a way to organize the data in the CPU, how to send it to the GPU, and how it is read by the GPU shaders, so the CPU-GPU data traffic is as minimum as possible. %In this subsection, we are going to describe the general data structures of the data and in the subsection \ref{ssec::optimization}, we present an optimization of the scheme for ODFs that have symmetry.
 
-\subsubsection{Positions}
-\todo[inline]{How to transfer data?}
-\textcolor{blue}{Because of the large amount of data, the main issue was the avoidance of CPU-GPU bottleneck.}
-\sout{The traffic CPU-GPU that refers to the translation consists of sending a vector containing} \textcolor{blue}{the set of} P translation matrices as \todo{uniform array? Use the GPU/OpenGL vocabulary to make understanding easier.}\textcolor{red}{an attribute, which is unique for each spherical mesh instantiated}.
+
+
+%The rendering scheme consists of instantiating an unit radius spherical mesh of N vertices centered on the origin and sent to the GPU only once. \todo{Should the translation matrix and ODF be sent to the GPU?}\textcolor{red}{At each instance, the mesh is transformed by a translation matrix and its ODF samples.}
+
+%The translation matrix \sout{positions}\textcolor{blue}{places} the center of the spherical mesh to \sout{its respective position}\textcolor{blue}{the center of the corresponding voxel}. The ODF samples represent the diffusion profile\textcolor{blue}{s} that are particular to each glyph. \sout{These which determines t}\textcolor{blue}{T}he \textcolor{blue}{glyph geometry}\sout{shape of the glyph} \textcolor{blue}{is reshaped} by multiplying the \textcolor{blue}{mesh normal $\bm{n}$} \sout{vertex of the mesh associated with the direction of diffusion} to \sout{its}\textcolor{blue}{the} ODF value \textcolor{blue}{whose diffusion direction is parallel to $\bm{n}$}.
+
+%\sout{In this rendering scheme, the set consisting of the translation matrices and the ODF profiles consists are sent from the CPU to the GPU in each drawing request. Hence, in order to achieve the goal of interactivity, it is desirable that the data traffic between both parts is as little as possible.}
+
+\subsubsection{Translation}
+Let P be the number of glyphs to be rendered on the screen. The translation matrices are organized as a vector of translation matrices with P elements and sent to the GPU as an attribute. The i-th index of the matrices set vector refers to the spherical mesh's i-th instance to be rendered centered at that position.
+
+
+%\todo[inline]{How to transfer data?}
+%\sout{The traffic CPU-GPU that refers to the translation consists of sending a vector containing} \textcolor{blue}{the set of} P translation matrices as \todo{uniform array? Use the GPU/OpenGL vocabulary to make understanding easier.}\textcolor{red}{an attribute, which is unique for each spherical mesh instantiated}.
 
 \subsubsection{ODFs}
 
-The ODF data sent to GPU consists of the N samples referring to the diffusion profiles for each of the P glyphs to be drawn. \sout{The approach used to set the ODF data and send to the GPU is by}\textcolor{blue}{We} construct\sout{ing} a $\bm{\Psi}_{PxN}$ matrix, where P is the number of glyphs to be drawn and N is the number of samples of ODF used\textcolor{blue}{, as given in Eq. \ref{eq::Psi}.} 
+The ODF data sent to GPU consists of the N samples referring to the diffusion profiles for each one of the P glyphs to be drawn. We construct a $\bm{\Psi}_{PxN}$ matrix, where P is the number of glyphs to be drawn, and N is the number of samples of ODF used, as given in Eq. \ref{eq::Psi}.
 
 \begin{equation}
 \label{eq::Psi}
@@ -285,19 +335,22 @@ The ODF data sent to GPU consists of the N samples referring to the diffusion pr
 \endgroup
 \end{equation}
 
-where \sout{its element} $\psi_{ij}$ refers to the ODF of the i-th glyph \sout{to be drawn} associated with the j-th vertex of the sphere, \sout{which has the coordinates of} \textcolor{blue}{at which the sphere normal is in} the direction $ \bm{u}_j$. \todo{????}\textcolor{red}{We named the ODF on the i-th line of $ \psi_i(\bm{u})$ and its value at the j-th vertex of the $\psi_i(\bm{u}_j)$ sphere.} The $\bm{\Psi}_{PxN}$ matrix is sent to the GPU as a 2D texture. \sout{$\bm{\Psi}$ is expressed as}
+where $\psi_{ij}$ refers to the ODF $\psi_i(\bm{u})$ of the i-th glyph, associated with the j-th vertex of the sphere, at which the sphere normal is in the direction $ \bm{u}_j$. The $\bm{\Psi}_{PxN}$ matrix is sent to the GPU as a 2D texture.
 
-\sout{The access in}\textcolor{blue}{On} the GPU\textcolor{blue}{, the access }of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader. \sout{To achieve this, it is necessary that} \textcolor{blue}{T}he vertex index (Vertex\_ID) of the direction of each vertex corresponds to the column of its respective ODF value $ \psi (\bm{u}_j) $ in diffusion profile matrix. \textcolor{blue}{The instance index (Instance\_ID), in its turn, corresponds to the row of diffusion profile at the respective vertex.}\sout{The access of the rows of the diffusion profile matrix, corresponding to the diffusion profiles in its respective point is accessible by the instance index (Instance\_ID).  Hence, the data organized in this established approach,}\textcolor{blue}{In this way,} \sout{the} \textcolor{blue}{we reduced GPU} access \sout{in the GPU is done by} \textcolor{blue}{to} performing a single lookup of the texel in the texture using the Vertex\_ID and Instance\_ID pair. \sout{How to access the GPU of the profile matrix is illustrated in the} Fig.\ref{fig::GPU2glyph} \textcolor{blue}{illustrates accesses of profile matrices on the GPU}.
+On the GPU, the access of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader. The vertex index (Vertex\_ID) of the direction of each vertex corresponds to the column of its respective ODF value $ \psi (\bm{u}_j) $ in diffusion profile matrix. The instance index (Instance\_ID), in its turn, corresponds to the row of diffusion profile at the respective vertex. Hence, we reduced GPU access performing a single lookup of the texel\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi}$, ivec(gl\_InstanceID, gl\_VertexID))} in the texture using the Vertex\_ID and Instance\_ID pair. Fig.\ref{fig::GPU2glyph} illustrates the access of the profile matrices on the GPU.
 
 %(MESMO PARÁGRAFO ACIMA, COM INDICAÇÕES OPENGL)The access in the GPU of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader. To achieve this, it is necessary that the vertex index (Vertex\_ID) (gl\_VertexID\footnotemark) of the direction of each vertex correspond to the column of its respective ODF value $ \psi (\bm{u}_j) $ in diffusion profile matrix. The access of the rows of the diffusion profile matrix, corresponding to the diffusion profiles in its respective point is accessible by the instance index (gl\_InstanceID\footnotemark [\value{footnote}]). Having the data organized in this established way, the access is done by perfoming a single lookup of the texel in the texture using the Vertex\_ID and Instance\_ID as a pair. In OpenGL, this can be done by the function texelFetch\footnotemark[\value{footnote}] with the row and column access arguments through the pair ( gl\_VertexID, gl\_InstanceID)\footnotemark [\value{footnote}] \footnotetext{All commands refer to OpenGL API and GLSL shading language.}. How to access the GPU of the profile matrix is illustrated in the Fig.\ref{fig::GPU2glyph}.
 
-\todo[inline]{It is not understandable the caption!!! And it is not clear what is exactly the column and what is the row. It seems that your texture is 3D. columen (vertex\_ID), row (instance\_ID), depth (diffusion profile consisting of a series of values).}
+%\todo[inline]{It is not understandable the caption!!! And it is not clear what is exactly the column and what is the row. It seems that your texture is 3D. columen (vertex\_ID), row (instance\_ID), depth (diffusion profile consisting of a series of values).}
 
 \begin{figure}[htb]
     \centering
     %\rule{6cm}{3cm}
     \includegraphics[width=1.0\linewidth, angle=0]{figs/rendering_scheme/GPU2Glyph.png}
-    \caption{\textcolor{red}{Illustration of the data organization in the GPU of the profile matrix (red) sent as 2D-Texture. The vertices of the spherical mesh are in green. At each instance, the customization of the glyph occurs through the multiplication of the mesh vertex with its respective value, recovered in the vertex shader through its vertex index for the P glyphs to be rendered}.}
+    \caption{
+    Illustration of $\bm{\Psi}$ in the GPU and how it is accessed for each vertex and instance. The vertices of the spherical mesh are in green. At each instance, the glyph's customization occurs through the multiplication of the mesh vertex with its respective value, recovered in the vertex shader through its vertex index for the P glyphs to be rendered.
+    %\textcolor{red}{Illustration of the data organization in the GPU of the profile matrix (red) sent as 2D-Texture. The vertices of the spherical mesh are in green. At each instance, the customization of the glyph occurs through the multiplication of the mesh vertex with its respective value, recovered in the vertex shader through its vertex index for the P glyphs to be rendered}.
+    }
     \label{fig::GPU2glyph}
 \end{figure}
 
@@ -324,17 +377,39 @@ where \sout{its element} $\psi_{ij}$ refers to the ODF of the i-th glyph \sout{t
 %    \item Set the output color as the rasterized color defined in the vertex shader.
 %\end{enumerate}
 
+\subsection{Rendering on the GPU}
+\label{ssec::rendering}
+
+\subsubsection{Vertex Shader}
+\begin{enumerate}
+    \item Lookup the coefficient that customizes the glyphs and multiply by the spherical vertex;
+    \item perform translation of the glyph;
+    \item do scaling and camera-related transformations;
+    \item compute color as a function of the spherical mesh vertex accordingly to Eq. \ref{eq::glyph_color} and send to the fragment shader.
+\end{enumerate}
+\subsubsection{Fragment Shader}
+\begin{enumerate}
+    \item Set the output color as the rasterized color set in the vertex shader.
+\end{enumerate}
+
+
 %\section{Optimization}
 
 \todo[inline]{Is it not better to put together with other part of description?}
+\subsection{Optimization}
+\label{ssec::optimization}
 
-\sout{In this section we show an adaption of the rendering scheme described in the sections \ref{sec::rendering_scheme} and \ref{sec::scheme_overview} to symmetrical ODFs and decrease the CPU-GPU data traffic by half.}
+In this subsection, we show an adaption of the data structure described in the subsection \ref{ssec::datastruct} to symmetrical ODFs and decrease its related CPU-GPU data traffic by half.
 
-An ODF is symmetrical if $\psi(\bm{u}) = \psi(-\bm{u})$ for all $\bm{u}$ in the unit sphere. This property is present on all imaging methods for diffusion.
+An ODF is symmetrical if $\psi(\bm{u}) = \psi(-\bm{u})$ for all $\bm{u}$ in the unit sphere. This symmetry applies to the diffusion behavior, which makes this section totally applicable for rendering HARDI ODFs.  %This property is present on all imaging methods for diffusion.
 
-\textcolor{red}{Firstly, we suggest the use of a symmetrical spherical mesh, which can be, for example, any order of a sphere \todo{How? It must be explained!}generated by a tessellated icosahedron. We suggest as well that the vector containing its vertices is organized in such a way that the vector in the (2k)-th index is symmetrical to the (2k+1)-th.}
+Firstly, we suggest the use of a symmetrical spherical mesh. That means, if a point $P$ is contained in the spherical mesh vertices set, the point $-P$ is also contained. As an example, any order of a tessellated icosahedron fits this criterion.
 
-Following these recommendations, for symmetrical functions, we have $\bm{u}_{2K+2} = -\bm{u}_{2K+1}$. Then, $\bm{\Psi}$ becomes:
+Secondly, we recommend that the chosen symmetrical spherical mesh's data structure is organized so that a point $P$ in an even index is followed by its symmetrical point $-P$.
+
+%\textcolor{red}{Firstly, we suggest the use of a symmetrical spherical mesh, which can be, for example, any order of a sphere \todo{How? It must be explained!}generated by a tessellated icosahedron. We suggest as well that the vector containing its vertices is organized in such a way that the vector in the (2k)-th index is symmetrical to the (2k+1)-th.}
+
+Following these recommendations, The data structure of points $[P_1, P_2, P_3, P_4, \dots, P_{N-1} P_N]$ becomes  $[P_1, -P_1, P_3, -P_3, \dots, P_{N-1}, -P_{N-1}]$ and their associated normals: $[\bm{u}_1, -\bm{u}_1, \bm{u}_3, -\bm{u}_3, \dots, \bm{u}_{N-1}, -\bm{u}_{N_1}$. In this situation, $\bm{\Psi}$ becomes
 
 \begin{equation*}
 \bm{\Psi} = 
@@ -352,9 +427,12 @@ Following these recommendations, for symmetrical functions, we have $\bm{u}_{2K+
 \end{bmatrix},
 \endgroup
 \end{equation*}
-where each of the (2K+1)-th column is the same as 2K-th\sout{, due to the symmetry of each partial function} \textcolor{blue}{one}.
 
-\todo{Very confusing!}We \textcolor{blue}{re}define \textcolor{blue}{Eq. \ref{eq::Psi}}, \sout{a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ where} \textcolor{blue}{such that} $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$. \sout{that is sent to GPU on every drawing request. Its form is stated below:}\textcolor{blue}{It assumes the form}
+where, for symmetrical ODFs, each of the (2k+1)-th column is the same as the (2k+2)-th, for $k$ integer positive and smaller than $\frac{N}{2}$.
+
+We define a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ such that $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$, which is described in the equation below:
+
+%\todo{Very confusing!}We \textcolor{blue}{re}define \textcolor{blue}{Eq. \ref{eq::Psi}}, \sout{a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ where} \textcolor{blue}{such that} $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$. \sout{that is sent to GPU on every drawing request. Its form is stated below:}\textcolor{blue}{It assumes the form}
 
 \begin{equation}
 \label{eq::Psi_changed}
@@ -374,12 +452,15 @@ where each of the (2K+1)-th column is the same as 2K-th\sout{, due to the symmet
 \endgroup
 \end{equation}
 
-\sout{In}\textcolor{blue}{On} the GPU, the 2K-th and (2K+1)-th Vertex\_ID of the same instance have the same value to lookup in $\bm{\Psi}^h$, which corresponds to the K-th index of the matrix, which can be accessed accordingly in the vertex shader.
+$\bm{\Psi^h}$ is sent to the GPU in every drawing request as a 2D texture, just as $\bm{\Psi}$ in the section \ref{ssec::datastruct}. On the GPU, the vertices corresponding to the 2K-th and (2K+1)-th Vertex\_ID in the spherical mesh of the same instance have the same value to lookup\footnote{In OpenGL, the lookup in the ODF matrix is done by the command texelFetch($\bm{\Psi^h}$, ivec(gl\_InstanceID, gl\_VertexID/2))}, corresponding to the K-th column, which can be accessed accordingly in the vertex shader.
+
+%\sout{In}\textcolor{blue}{On} the GPU, the  in $\bm{\Psi}^h$, which corresponds to the K-th index of the matrix, which can be accessed accordingly in the vertex shader.
 
 
 
 \section{Results}
-Some of the results applied to a DW-MRI in the region of the corpus callosum is shown in Fig. \ref{fig::ex_glyph} and \ref{fig::ex_glyph_FAMAP} for different tesselations of the icosahedron.
+\label{sec::results}
+Some of the results applied to a DW-MRI in the corpus callosum region are shown in Fig. \ref{fig::ex_glyph} for different tesselations of the icosahedron. Fig. \ref{fig::ex_glyph_FAMAP} shows an application of the proposed scheme integrated into a DWI visualization system.
 
 \begin{figure}[t]
 \centering
@@ -403,21 +484,22 @@ Some of the results applied to a DW-MRI in the region of the corpus callosum is 
 
 \subsection{Performance}
 
-In the tables !!refTable follows the benchmark of the rendering scheme. The benchmark consists of the time of copying pre processed data to send to the GPU and the GPU processing and drawing time. If the ODFs are stored as coefficients of spherical harmonics, it needs a step of sampling over an spherical mesh.
+In the tables !!refTable follows the benchmark of the rendering scheme. The benchmark consists of the time of copying pre-processed data to send to the GPU and the GPU processing and drawing time. If the ODFs are stored as coefficients of spherical harmonics, it needs a step of sampling over a spherical mesh.
 
 \subsection{\textcolor{blue}{An Application}}
 
 \todo[inline]{To assess the fiber orientations locally?}
 
 \section{Conclusions}
+\label{sec::conclusions}
 
-In this work we presented a rendering scheme to render multiple ODFs at interactive rates. We used polygons approach and suggested procedures to decrease the data traffic CPU-GPU in drawing requests.
+In this work, we presented a rendering scheme to render multiple ODFs at interactive rates. We used a polygons-based approach and suggested procedures to decrease the data traffic CPU-GPU in drawing requests.
 
-We also suggested a optimization procedure to decrease the data computation and traffic between CPU by half on symmetrical ODFs.
+We also suggested an optimization procedure to decrease the data computation and CPU-GPU data traffic by half on symmetrical ODFs.
 
 The rendering scheme proved to be fast enough to render hundreds of objects, which meshes are fine sufficiently to make the surfaces appear smooth.
 
-That scheme can be integrated with other DW-MRI and MRI visualization schemes. It can be a very useful tool to render each ODF's glyph on its respective voxel in the scene.
+That scheme can be integrated with other DW-MRI and MRI visualization schemes. It can be a handy tool to render each ODF's glyph on its respective voxel in the scene.
 
 
 

@@ -185,7 +185,7 @@ More advanced imaging methods for diffusion were introduced to overcome the limi
 
 The most common method to visualize HARDI data through these advanced imaging methods is by spherical polar plot glyphs. These methods are represented by orientation distribution functions (ODF), which consists of an association of a set of directions, represented by unit vectors, to a set of scalars that represents the diffusivity for each element in the domain.
 
-The spherical polar plot consists of the modulation of a sphere surface, where its radius points are scaled to its ODF values. To emphasize the orientational structure, it is useful to generate the glyphs using a min-max normalized version of the ODF \cite{TuchQBall2004}, as illustrated in Fig. \ref{fig::intro_glyph}. The min-max normalization is defined in Eq. \ref{eq::normglifo}
+The spherical polar plot consists of the modulation of a sphere surface, where its radius points are scaled to its ODF values. To emphasize the orientational structure, it is useful to generate the glyphs using a min-max normalized version of the ODF \cite{TuchQBall2004}, as illustrated in Fig. \ref{fig::intro_glyph}. The spherical polar plot of the min-max normalization of an ODF $\psi(\bm{u})$ is defined in Eq. \ref{eq::normglifo}
 
 \begin{figure}[htb]
     \centering
@@ -206,7 +206,7 @@ The spherical polar plot consists of the modulation of a sphere surface, where i
     R(\bm{u}) = \frac{\psi(\bm{u}) - min(\psi(\bm{u}))}{max(\psi(\bm{u})) - min(\psi(\bm{u}))}
 \end{equation}
 
-where $\bm{u}$ is a unity vector contained in the spherical domain, and $R(\bm{u})$ is the radius of the spherical mesh.
+where $R(\bm{u})$ is the length of an deformed sphere in the direction $\bm{u}$.
 
 These glyphs provide a clear visualization of local diffusion through its ODF samples. Researchers use them to validate an imaging method \cite{descoteaux2007_QBI,  TuchQBall2004,tournier2007,Tournier2004DirectEO, tuch2002,  yeh2010}, assess the local relationship between the acquisition quality, the imaging method, and the underlying fiber orientation distribution detected (FOD) \cite{descoteaux2007}. The FODs extracted from an imaging method applied to a DWI acquisition are used as input of fiber tracking algorithms. The conjecture of the brain connectivity from the DWI acquisitions motivates this research area's main motivation. %Inferring brain tracts from DWI acquisitions consists on the main motivation of the research in the area.
 
@@ -260,7 +260,7 @@ Polygons-based glyph rendering schemes are an area that has not been much explor
 
 Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyphs as an alternative to the polygon-based approaches and achieved better performance results. In their approach, each glyph's CPU-GPU data traffic consists of coefficients of spherical harmonics for a GPU-based ray casting algorithm. This approach was further improved until.......!!!
 
-Voltoline et al. \cite{voltoline2021} proposed a real-time rendering scheme for a glyph representation of diffusion tensor called superquadrics \cite{Kindlmann2004}. In their work, they minimize the CPU-GPU data traffic to a few parameters that customize the glyphs in each drawing request using the instance rendering technique, obtaining state of art performance results. These results influenced us to apply this technique and adapt their results in our HARDI glyph rendering scheme.
+Voltoline et al. \cite{voltoline2021} proposed a real-time rendering scheme for a glyph representation of diffusion tensor called superquadrics \cite{Kindlmann2004}. In their work, they minimize the CPU-GPU data traffic to a few parameters that customize the glyphs in each drawing request using the instance rendering technique, obtaining state of art performance results. These results influenced us to apply adapt their scheme in our HARDI glyph rendering scheme.
 
 %\todo[inline]{It is important to cite Voltoline's work.}
 
@@ -268,7 +268,7 @@ Voltoline et al. \cite{voltoline2021} proposed a real-time rendering scheme for 
 \section{ODF Glyph Rendering}
 \label{sec::odf_glyph_rendering}
 
-Our goal is to show the rendering scheme of the glyphs to be shown in the scene. The subsection \ref{ssec::precomputation} describes the procedures that must be done a priori; in the subsection \ref{ssec::datastruct}, we describe the input data structures that customize the glyphs and are the most part of the CPU-GPU data traffic, and in the subsection \ref{ssec::rendering}, we provide a summary of the CPU and GPU division of tasks and in \ref{ssec::optimization}, we discuss an optimization that can be done in symmetrical ODFs.
+Our goal is to show the rendering scheme of the glyphs to be shown in the scene. The subsection \ref{ssec::precomputation} describes the procedures that must be done a priori; the subsection \ref{ssec::datastruct}, we describe the input data structures that customize the glyphs and are the most part of the CPU-GPU data traffic; in the subsection \ref{ssec::rendering}, we provide a summary of the CPU and GPU division of tasks and in subsection \ref{ssec::optimization}, we discuss an optimization that can be done in symmetrical ODFs.
 
 %The input of the rendering scheme consists in two set of elements: the set positions in the scene and a set of ODF profiles that .
 
@@ -281,9 +281,7 @@ Our goal is to show the rendering scheme of the glyphs to be shown in the scene.
 
 The glyphs consist of spheres with each one of its radius points deformed by its respective ODF value.
 
-The scheme's precomputation consists of setting a unit spherical mesh of N vertices centered in the origin and its respective index buffer and send to the GPU only once as an attribute to be instanced.
-
-
+The scheme's precomputation consists of setting a unit spherical mesh $ \{\bm{p}\} = \{P_1, P_2, \dots, P_N\}$ of $N$ points centered in the origin and its respective index buffer and send to the GPU only once as an attribute to be instanced.
 
 %\todo[inline]{What to be rendered? At least a paragraph explaining the objects to be rendered. Spheres deformed by ODFs?}
 
@@ -296,9 +294,9 @@ The scheme's precomputation consists of setting a unit spherical mesh of N verti
 \subsection{Data Structures}
 \label{ssec::datastruct}
 
-Two elements customize each one of the glyphs: their position and their ODF samples. These elements are sent to the GPU in every draw request.
+Two elements customize each one of the glyphs: their position and ODF samples. These elements are sent to the GPU in every draw request.
 
-The translation matrix places the center of the spherical mesh to its corresponding position. The ODF samples represent the diffusion profiles that are particular to each glyph. The glyph geometry is reshaped by multiplying the mesh normal direction $\bm{n}$ to its respective ODF value $\Psi(\bm{n})$.
+The translation matrix places the center of the spherical mesh to its corresponding position. The ODF samples deform its respective spherical mesh. Let $P$ be a point of the spherical mesh, then lets define $\{\bm{U}\} = \{\bm{u}_k | \bm{u}_k = P_k - C, \forall P_k \in \{\bm{p}\} \text{ and $C$ is the center of the sphere}\}$. The glyph geometry is reshaped by scaling each point $P$ in the mesh to its respective ODF value $\psi(\bm{u})$ before translating it.
 
 Due to the large amount of data sent to the GPU in the drawing requests, the goal of this subsection is to show a way to organize the data in the CPU, how to send it to the GPU, and how it is read by the GPU shaders, so the CPU-GPU data traffic is as minimum as possible. %In this subsection, we are going to describe the general data structures of the data and in the subsection \ref{ssec::optimization}, we present an optimization of the scheme for ODFs that have symmetry.
 
@@ -311,7 +309,9 @@ Due to the large amount of data sent to the GPU in the drawing requests, the goa
 %\sout{In this rendering scheme, the set consisting of the translation matrices and the ODF profiles consists are sent from the CPU to the GPU in each drawing request. Hence, in order to achieve the goal of interactivity, it is desirable that the data traffic between both parts is as little as possible.}
 
 \subsubsection{Translation}
-Let P be the number of glyphs to be rendered on the screen. The translation matrices are organized as a vector of translation matrices with P elements and sent to the GPU as an attribute. The i-th index of the matrices set vector refers to the spherical mesh's i-th instance to be rendered centered at that position.
+Let P be the amount of instances of the rendering scheme and the number of glyphs to be rendered. The translation matrices are organized as a vector with P elements and sent to the GPU as an attribute. This attribute is unique for each one of the P instances of the spherical mesh.
+
+The i-th index of the matrices set vector refers to the spherical mesh's i-th instance to be rendered centered at the position given by the coordinates stored at this index.
 
 
 %\todo[inline]{How to transfer data?}
@@ -319,7 +319,7 @@ Let P be the number of glyphs to be rendered on the screen. The translation matr
 
 \subsubsection{ODFs}
 
-The ODF data sent to GPU consists of the N samples referring to the diffusion profiles for each one of the P glyphs to be drawn. We construct a $\bm{\Psi}_{PxN}$ matrix, where P is the number of glyphs to be drawn, and N is the number of samples of ODF used, as given in Eq. \ref{eq::Psi}.
+The ODF data sent to GPU consists of the N samples referring to the diffusion profiles for each one of the P glyphs to be drawn. We construct a $\bm{\Psi}_{PxN}$ matrix, where P is the number of glyphs to be drawn, and N is the number of samples of ODF used, as given in Eq. \ref{eq::Psi}:
 
 \begin{equation}
 \label{eq::Psi}
@@ -335,9 +335,16 @@ The ODF data sent to GPU consists of the N samples referring to the diffusion pr
 \endgroup
 \end{equation}
 
-where $\psi_{ij}$ refers to the ODF $\psi_i(\bm{u})$ of the i-th glyph, associated with the j-th vertex of the sphere, at which the sphere normal is in the direction $ \bm{u}_j$. The $\bm{\Psi}_{PxN}$ matrix is sent to the GPU as a 2D texture.
+where $\psi_{ij}$ refers to the ODF value $\psi_i(\bm{u}_j)$ of the i-th glyph associated with the direction $\bm{u}_j$, which scales the $P_j$ vertex of the sphere. The $\bm{\Psi}_{PxN}$ matrix is sent to the GPU as a 2D texture.
 
-On the GPU, the access of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader. The vertex index (Vertex\_ID) of the direction of each vertex corresponds to the column of its respective ODF value $ \psi (\bm{u}_j) $ in diffusion profile matrix. The instance index (Instance\_ID), in its turn, corresponds to the row of diffusion profile at the respective vertex. Hence, we reduced GPU access performing a single lookup of the texel\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi}$, ivec(gl\_InstanceID, gl\_VertexID))} in the texture using the Vertex\_ID and Instance\_ID pair. Fig.\ref{fig::GPU2glyph} illustrates the access of the profile matrices on the GPU.
+On the GPU, the access of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader.
+
+The instance index (Instance\_ID) corresponds to an instanced spherical mesh to be rendered at a certain position. Since the ODFs samples of one glyph is stored in the rows of $\bm{\Psi}$, the Instance\_ID access this dimension.
+
+
+The vertex index (Vertex\_ID), in its turn, indicates the points of the spherical mesh, which corresponds to the column of its respective ODF value in $\bm{\Psi}$.
+
+Hence, we perform the GPU access by a single lookup of the texture texel\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi}$, ivec(gl\_InstanceID, gl\_VertexID))} using the Vertex\_ID and Instance\_ID pair. Fig.\ref{fig::GPU2glyph} illustrates the ODF access for each instance and vertex in the GPU.
 
 %(MESMO PARÁGRAFO ACIMA, COM INDICAÇÕES OPENGL)The access in the GPU of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader. To achieve this, it is necessary that the vertex index (Vertex\_ID) (gl\_VertexID\footnotemark) of the direction of each vertex correspond to the column of its respective ODF value $ \psi (\bm{u}_j) $ in diffusion profile matrix. The access of the rows of the diffusion profile matrix, corresponding to the diffusion profiles in its respective point is accessible by the instance index (gl\_InstanceID\footnotemark [\value{footnote}]). Having the data organized in this established way, the access is done by perfoming a single lookup of the texel in the texture using the Vertex\_ID and Instance\_ID as a pair. In OpenGL, this can be done by the function texelFetch\footnotemark[\value{footnote}] with the row and column access arguments through the pair ( gl\_VertexID, gl\_InstanceID)\footnotemark [\value{footnote}] \footnotetext{All commands refer to OpenGL API and GLSL shading language.}. How to access the GPU of the profile matrix is illustrated in the Fig.\ref{fig::GPU2glyph}.
 
@@ -348,7 +355,7 @@ On the GPU, the access of ODFs to deform its respective sphere point is done by 
     %\rule{6cm}{3cm}
     \includegraphics[width=1.0\linewidth, angle=0]{figs/rendering_scheme/GPU2Glyph.png}
     \caption{
-    Illustration of $\bm{\Psi}$ in the GPU and how it is accessed for each vertex and instance. The vertices of the spherical mesh are in green. At each instance, the glyph's customization occurs through the multiplication of the mesh vertex with its respective value, recovered in the vertex shader through its vertex index for the P glyphs to be rendered.
+    Illustration of $\bm{\Psi}$ in the GPU and how it is accessed for each vertex and instance. The vertices of the spherical mesh are in green. At each instance, the glyph's customization occurs through the scaling of the mesh point with its respective ODF value, recovered in the vertex shader through its vertex index for the P glyphs to be rendered.
     %\textcolor{red}{Illustration of the data organization in the GPU of the profile matrix (red) sent as 2D-Texture. The vertices of the spherical mesh are in green. At each instance, the customization of the glyph occurs through the multiplication of the mesh vertex with its respective value, recovered in the vertex shader through its vertex index for the P glyphs to be rendered}.
     }
     \label{fig::GPU2glyph}
@@ -377,7 +384,7 @@ On the GPU, the access of ODFs to deform its respective sphere point is done by 
 %    \item Set the output color as the rasterized color defined in the vertex shader.
 %\end{enumerate}
 
-\subsection{Rendering on the GPU}
+\subsection{GPU Rendering Overview}
 \label{ssec::rendering}
 
 \subsubsection{Vertex Shader}
@@ -399,17 +406,17 @@ On the GPU, the access of ODFs to deform its respective sphere point is done by 
 \subsection{Optimization}
 \label{ssec::optimization}
 
-In this subsection, we show an adaption of the data structure described in the subsection \ref{ssec::datastruct} to symmetrical ODFs and decrease its related CPU-GPU data traffic by half.
+In this subsection, we show an adaption of the data structure described in the subsection \ref{ssec::datastruct} to symmetrical ODFs and show an estrategy to decrease its related CPU-GPU data traffic by half.
 
 An ODF is symmetrical if $\psi(\bm{u}) = \psi(-\bm{u})$ for all $\bm{u}$ in the unit sphere. This symmetry applies to the diffusion behavior, which makes this section totally applicable for rendering HARDI ODFs.  %This property is present on all imaging methods for diffusion.
 
-Firstly, we suggest the use of a symmetrical spherical mesh. That means, if a point $P$ is contained in the spherical mesh vertices set, the point $-P$ is also contained. As an example, any order of a tessellated icosahedron fits this criterion.
+Firstly, we suggest the use of a symmetrical spherical mesh. That means, if a point $P \in {\bm{p}} \implies -P \in {\bm{p}}$ as well. As an example, any order of a tessellated icosahedron fits this criterion.
 
-Secondly, we recommend that the chosen symmetrical spherical mesh's data structure is organized so that a point $P$ in an even index is followed by its symmetrical point $-P$.
+Secondly, we recommend that the chosen symmetrical spherical mesh's data structure is organized so that a point $P$ in an even index is followed by its symmetrical point $-P$. This spherical mesh is sent to the GPU in the same form as stated in the subsection \ref{ssec::precomputation}.
 
 %\textcolor{red}{Firstly, we suggest the use of a symmetrical spherical mesh, which can be, for example, any order of a sphere \todo{How? It must be explained!}generated by a tessellated icosahedron. We suggest as well that the vector containing its vertices is organized in such a way that the vector in the (2k)-th index is symmetrical to the (2k+1)-th.}
 
-Following these recommendations, The data structure of points $[P_1, P_2, P_3, P_4, \dots, P_{N-1} P_N]$ becomes  $[P_1, -P_1, P_3, -P_3, \dots, P_{N-1}, -P_{N-1}]$ and their associated normals: $[\bm{u}_1, -\bm{u}_1, \bm{u}_3, -\bm{u}_3, \dots, \bm{u}_{N-1}, -\bm{u}_{N_1}$. In this situation, $\bm{\Psi}$ becomes
+Following these recommendations, the data structure of points in the sphere $[P_1, P_2, P_3, P_4, \dots, P_{N-1}, P_N]$ becomes  $[P_1, -P_1, P_3, -P_3, \dots, P_{N-1}, -P_{N-1}]$ and their associated $\{\bm{U}\}$ turns to  $[\bm{u}_1, -\bm{u}_1, \bm{u}_3, -\bm{u}_3, \dots, \bm{u}_{N-1}, -\bm{u}_{N-1}]$. In this situation, $\bm{\Psi}$ is now:
 
 \begin{equation*}
 \bm{\Psi} = 
@@ -428,9 +435,9 @@ Following these recommendations, The data structure of points $[P_1, P_2, P_3, P
 \endgroup
 \end{equation*}
 
-where, for symmetrical ODFs, each of the (2k+1)-th column is the same as the (2k+2)-th, for $k$ integer positive and smaller than $\frac{N}{2}$.
+where, for symmetrical ODFs, each of the (2k+1)-th column is the same as the (2k+2)-th, for $k$ positive integer and smaller than $\frac{N}{2}$.
 
-We define a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ such that $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$, which is described in the equation below:
+Hence, we define a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ such that $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$, which is described in the equation below:
 
 %\todo{Very confusing!}We \textcolor{blue}{re}define \textcolor{blue}{Eq. \ref{eq::Psi}}, \sout{a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ where} \textcolor{blue}{such that} $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$. \sout{that is sent to GPU on every drawing request. Its form is stated below:}\textcolor{blue}{It assumes the form}
 

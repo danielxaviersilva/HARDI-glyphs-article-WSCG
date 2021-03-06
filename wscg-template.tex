@@ -206,7 +206,7 @@ The spherical polar plot consists of the modulation of a sphere surface, where i
     R(\bm{u}) = \frac{\psi(\bm{u}) - min(\psi(\bm{u}))}{max(\psi(\bm{u})) - min(\psi(\bm{u}))}
 \end{equation}
 
-where $R(\bm{u})$ is the length of an deformed sphere in the direction $\bm{u}$.
+%where $R(\bm{u})$ is the length of a deformed sphere in the direction $\bm{u}$.
 
 These glyphs provide a clear visualization of local diffusion through its ODF samples. Researchers use them to validate an imaging method \cite{descoteaux2007_QBI,  TuchQBall2004,tournier2007,Tournier2004DirectEO, tuch2002,  yeh2010} and assess the local relationship between the acquisition quality, the imaging method, and the underlying fiber orientation distribution (FOD) computed \cite{cho2008, daducci2014,descoteaux2007,  vega2009}. %The FODs extracted from an imaging method applied to a DWI acquisition are used as input of fiber tracking algorithms. %The conjecture of the possibility of brain connectivity from the DWI acquisitions motivates this research area's main motivation.
 
@@ -252,8 +252,8 @@ This paper is divided in \ref{sec::conclusions} sections. In section \ref{sec::r
 
 
 
-Polygons-based glyph rendering schemes are an area that has not been much explored by the HARDI community. Shattuck et al. \cite{shattuck2008} presented in their work the rendering of these glyphs but did not obtain interactive rates on rendering. The performance result reported by them were 10 FPS for a spherical mesh of 225 vertices and 2 million triangles being rendered. The authors did not detail their rendering scheme and did not take advantage of the GPU programming to improve it, as we show in this work.
-%ALGO RELEVANTE: ESSE TRABALHO DO SHATTUCK É O ÚLTIMO DA ÁREA QUE TEM ALGUMA COISA A VER COM O MEU, QUE É RENDERIZAR GLIFOS HARDI EM TREAL.
+Polygons-based glyph rendering schemes are an area that has not been much explored by the HARDI community. Shattuck et al. \cite{shattuck2008} presented in their work the rendering of these glyphs and reports a limitation in the rendering performance. The performance result reported by them were 10 FPS for a spherical mesh of 225 vertices and 2 million triangles being rendered. The authors did not detail their rendering scheme and did not take advantage of the GPU programming to improve it, as we show in this work.
+%ALGO RELEVANTE: ESSE TRABALHO DO SHATTUCK É O ÚLTIMO DA ÁREA QUE TEM ALGUMA COISA A VER COM O MEU, QUE É RENDERIZAR GLIFOS HARDI EM TEMPO REAL VIA POLIGONOS.
 
 
 % \sout{ and imply that they were not programming the GPU. It is worth mentioning that instance rendering was not released back then}.
@@ -268,7 +268,7 @@ Voltoline et al. \cite{voltoline2021} proposed a real-time rendering scheme for 
 \section{ODF Glyph Rendering}
 \label{sec::odf_glyph_rendering}
 
-Our goal is to show the rendering scheme of the glyphs to be shown in the scene. The subsection \ref{ssec::precomputation} describes the procedures that must be done a priori; in the subsection \ref{ssec::datastruct}, we describe the input data structures that customize the glyphs and are the most of the CPU-GPU data traffic; in the subsection \ref{ssec::rendering}, we provide a summary of the CPU and GPU division of tasks and, in the subsection \ref{ssec::optimization}, we discuss an optimization that can be done in symmetrical ODFs.
+Our goal is to show the rendering scheme of the glyphs to be shown in the scene. The subsection \ref{ssec::precomputation} describes the procedures that must be done at the initialization of the rendering scheme; in the subsection \ref{ssec::datastruct}, we describe the input data structures that customize the glyphs and are the most of the CPU-GPU data traffic and an optimization for symmetrical ODFs; in the subsection \ref{ssec::rendering}, we provide a summary of the CPU and GPU division of tasks.% and, in the subsection \ref{ssec::optimization}, we discuss an optimization that can be done in symmetrical ODFs.
 
 %The input of the rendering scheme consists in two set of elements: the set positions in the scene and a set of ODF profiles that .
 
@@ -296,7 +296,7 @@ The scheme's precomputation consists of setting a mesh of a unit sphere centered
 
 Two elements customize each one of the glyphs: ODF samples and their position. These elements are sent to the GPU in every draw request.
 
-First, lets define the set $\Upsilon = \{\bm{u}_k | \bm{u}_k = P_k - O, \forall P_k \in \Pi\ \text{and O is the origin point}\}$. The glyph geometry is deformed by scaling each point $P_k$ in the mesh to ODF value $\psi(\bm{u}_k)$ before translating it. The translation matrix places the deformed spherical mesh to be centered at a point $C(x, y, z)$. 
+First, lets define the vector set $\Upsilon = \{\bm{u}_k | \bm{u}_k = \frac{P_k - O}{|P_k - O|}, \forall P_k \in \Pi\ \text{and O is the center of the sphere}\}$. The glyph geometry is deformed by scaling each point $P_k$ in the mesh to ODF value $\psi(\bm{u}_k)$ before translating it. The translation matrix places the deformed spherical mesh to be centered at a point $C(x, y, z)$. 
 
 Due to the large amount of data sent to the GPU in the drawing requests, the goal of this subsection is to show a way to organize the data in the CPU, how to send it to the GPU, and how the GPU shaders read it, so the CPU-GPU data traffic is as minimum as possible. %In this subsection, we are going to describe the general data structures of the data and in the subsection \ref{ssec::optimization}, we present an optimization of the scheme for ODFs that have symmetry.
 
@@ -335,16 +335,15 @@ The ODF data sent to GPU consists of the N samples referring to the diffusion pr
 \endgroup
 \end{equation}
 
-where $\psi_{ij}$ refers to the ODF value $\psi_i(\bm{u}_j)$ of the i-th glyph associated with the direction $\bm{u}_j$, which scales the $P_j$ vertex of the sphere. The $\bm{\Psi}_{PxN}$ matrix is sent to the GPU as a 2D texture.
+where $\psi_{ij}$ refers to the ODF value $\psi_i(\bm{u}_j)$ of the i-th glyph associated with the direction $\bm{u}_j$, which scales the $P_j$ vertex of the spherical mesh. The $\bm{\Psi}_{PxN}$ matrix is sent to the GPU as a 2D texture.
 
 On the GPU, the access of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader.
 
-The instance index (Instance\_ID) corresponds to an instanced spherical mesh to be translated to a specific position, and since ODFs samples of one glyph are stored in the rows of $\bm{\Psi}$, the Instance\_ID access this dimension.
-
+The instance index (Instance\_ID) corresponds to an instanced spherical mesh centered in its respective point $P$, and since ODFs samples of one glyph are stored in the rows of $\bm{\Psi}$, the Instance\_ID access this dimension.
 
 The vertex index (Vertex\_ID), in its turn, indicates a point of the spherical mesh, which corresponds to the column of its respective ODF value in $\bm{\Psi}$.
 
-Hence, we perform the GPU access by a single lookup of the texture texel\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi}$, ivec(gl\_InstanceID, gl\_VertexID))} using the Vertex\_ID and Instance\_ID pair. Fig.\ref{fig::GPU2glyph} illustrates the ODF access for each instance and vertex in the GPU.
+Hence, we perform the GPU access by a single lookup of the texture texel\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi}$, ivec2(gl\_InstanceID, gl\_VertexID), 0)[0]} using the Vertex\_ID and Instance\_ID pair. Fig.\ref{fig::GPU2glyph} illustrates the ODF access for each instance and vertex in the GPU.
 
 %(MESMO PARÁGRAFO ACIMA, COM INDICAÇÕES OPENGL)The access in the GPU of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader. To achieve this, it is necessary that the vertex index (Vertex\_ID) (gl\_VertexID\footnotemark) of the direction of each vertex correspond to the column of its respective ODF value $ \psi (\bm{u}_j) $ in diffusion profile matrix. The access of the rows of the diffusion profile matrix, corresponding to the diffusion profiles in its respective point is accessible by the instance index (gl\_InstanceID\footnotemark [\value{footnote}]). Having the data organized in this established way, the access is done by perfoming a single lookup of the texel in the texture using the Vertex\_ID and Instance\_ID as a pair. In OpenGL, this can be done by the function texelFetch\footnotemark[\value{footnote}] with the row and column access arguments through the pair ( gl\_VertexID, gl\_InstanceID)\footnotemark [\value{footnote}] \footnotetext{All commands refer to OpenGL API and GLSL shading language.}. How to access the GPU of the profile matrix is illustrated in the Fig.\ref{fig::GPU2glyph}.
 
@@ -384,27 +383,8 @@ Hence, we perform the GPU access by a single lookup of the texture texel\footnot
 %    \item Set the output color as the rasterized color defined in the vertex shader.
 %\end{enumerate}
 
-\subsection{GPU Rendering Overview}
-\label{ssec::rendering}
-
-\subsubsection{Vertex Shader}
-\begin{enumerate}
-    \item Lookup the coefficient that customizes the glyphs and multiply by the spherical vertex;
-    \item perform translation of the glyph;
-    \item scale and apply the model-view-projection transformation;
-    \item compute color as a function of the spherical mesh vertex accordingly to Eq. \ref{eq::glyph_color} and send to the fragment shader.
-\end{enumerate}
-\subsubsection{Fragment Shader}
-\begin{enumerate}
-    \item Set the output color as the rasterized color set in the vertex shader.
-\end{enumerate}
-
-
-%\section{Optimization}
-
-%\todo[inline]{Is it not better to put together with other part of description?}
-\subsection{Optimization}
-\label{ssec::optimization}
+\subsubsection{Optimization on symmetrical ODFs}
+\label{sssec::optimization}
 
 In this subsection, we show an adaption of the data structure described in the subsection \ref{ssec::datastruct} to symmetrical ODFs and a strategy to decrease its related CPU-GPU data traffic by half.
 
@@ -459,10 +439,31 @@ Hence, we define a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ such that $\bm{\psi^h}_{
 \endgroup
 \end{equation*}
 
-$\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm{\Psi}$ described in the subsection,\ref{ssec::datastruct} and the difference lies in the lookup process. On the GPU, the vertices corresponding to the 2k-th and (2k+1)-th Vertex\_ID in the spherical mesh of the same instance have the same value to lookup\footnote{In OpenGL, the lookup in the ODF matrix is done by the command texelFetch($\bm{\Psi^h}$, ivec(gl\_InstanceID, gl\_VertexID/2))}, corresponding to the k-th column, which can be accessed accordingly in the vertex shader.
+$\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm{\Psi}$ described in the subsection,\ref{ssec::datastruct} and the difference lies in the lookup process. On the GPU, the vertices corresponding to the 2k-th and (2k+1)-th Vertex\_ID in the spherical mesh of the same instance have the same value to lookup\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi^h}$, ivec2(gl\_InstanceID, gl\_VertexID/2), 0)[0]}, corresponding to the k-th column, which can be accessed accordingly in the vertex shader.
 
 %\sout{In}\textcolor{blue}{On} the GPU, the  in $\bm{\Psi}^h$, which corresponds to the K-th index of the matrix, which can be accessed accordingly in the vertex shader.
 
+
+
+\subsection{GPU Rendering Overview}
+\label{ssec::rendering}
+
+\subsubsection{Vertex Shader}
+\begin{enumerate}
+    \item Lookup the coefficient that customizes the glyphs and multiply by the spherical vertex;
+    \item perform translation of the glyph;
+    \item scale and apply the model-view-projection transformation;
+    \item compute color as a function of the spherical mesh vertex accordingly to Eq. \ref{eq::glyph_color} and send to the fragment shader.
+\end{enumerate}
+\subsubsection{Fragment Shader}
+\begin{enumerate}
+    \item Set the output color as the rasterized color set in the vertex shader.
+\end{enumerate}
+
+
+%\section{Optimization}
+
+%\todo[inline]{Is it not better to put together with other part of description?}
 
 
 \section{Results}
@@ -491,11 +492,31 @@ Fig. \ref{fig::ex_glyph} shows glyphs for different meshes. Fig. \ref{fig::ex_gl
 
 \subsection{Performance}
 
-In the tables !!refTable follows the benchmark of the rendering scheme. The benchmark consists of the time of copying pre-processed data to send to the GPU and the GPU processing and drawing time. If the ODFs are stored as coefficients of spherical harmonics, it needs a step of sampling over a spherical mesh.
+In the tables !!refTable follows the benchmark of the rendering scheme. The benchmark on the data structures setup, CPU-GPU traffic and the GPU processing and drawing time. The data structures setup process is accelerated by using CPU parallelism. %If the ODFs are stored as coefficients of spherical harmonics, it needs a step of sampling over a spherical mesh.
+
+
+%Mention comparison with raycasting methods
+
+
 
 \subsection{\textcolor{blue}{An Application}}
 
 %\todo[inline]{To assess the fiber orientations locally?}
+
+\subsection{Visual Aspects}
+
+
+\subsection{Discussion}
+
+Albeit we presented means to decrease CPU-GPU data traffic on this polygon-based approach, it is still much higher than the ray casting approaches. In their work, Peeters et. al. \cite{peeters2009} mentions a data-traffic of 15 spherical harmonics coefficients per glyph and obtain smoother results than $3^{rd}$ and $4^{th}$ order tessellation of an icosahedron, whereas these rendering strategies makes possible to increase the resolution of the sphere.
+
+In our approach, the GPU shaders are much simpler, since it only does lookup on a texture and per-vertex linear transformations, where in ray casting approaches it.
+
+In MRI visualization tools, one may code an HARDI ODFs in two different ways: samples on a sphere and spherical harmonics coefficients. This rendering scheme is straight forward to be used when the data is coded in samples on a sphere, but this way to code HARDI data can be very memory demanding.
+
+
+
+
 
 \section{Conclusions}
 \label{sec::conclusions}
@@ -504,7 +525,7 @@ In this work, we presented a rendering scheme to render multiple ODFs at interac
 
 We also suggested an optimization procedure to decrease the data computation and CPU-GPU data traffic by half on symmetrical ODFs.
 
-The rendering scheme proved to be fast enough to render hundreds of objects, which meshes are fine sufficiently to make the surfaces appear smooth.
+The rendering scheme proved to be fast enough to render hundreds of objects using meshes that are fine sufficiently to make the surfaces appear smooth.
 
 That scheme can be integrated with other DW-MRI and MRI visualization schemes. It can be a handy tool to render each ODF's glyph on its respective voxel in the scene.
 

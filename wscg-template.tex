@@ -60,7 +60,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                Title
 
-\title{Fast polygon-based glyph rendering scheme for HARDI DWI acquisitions}
+\title{Fast polygon-based glyph rendering scheme for high angular resolution diffusion imaging}
 
 \author{
 \parbox{0.25\textwidth}{\centering
@@ -160,7 +160,6 @@ medical visualization, HARDI, computer graphics, visualization.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{O QUE FALTA}
 \begin{enumerate}
-    \item UM BENCHMARK SISTEMATICO EM CIMA DE ICOSAEDROS TESSELADOS
     \item COMPARACAO COM OS METODOS RAYCASTING
     \item EXEMPLIFICAR COM DIFERENTES RESOLUCOES
     
@@ -183,7 +182,7 @@ More advanced imaging methods for diffusion and high angular resolution diffusio
 
 %\sout{To overcome the limitation of the gaussian model assumption, m}\textcolor{blue}{M}ore advanced imaging methods for diffusion were introduced \textcolor{blue}{to overcome the limitation of the Gaussian model}. These methods require more samples on the DWI \textcolor{blue}{acquisitions} than \textcolor{blue}{those applied } \sout{the acquisitions used} on DTI\sout{ and t}\textcolor{blue}{. T}hese acquisitions \sout{were labeled as}\textcolor{blue}{are called} High Angular Resolution Diffusion Imaging (HARDI). While the amount of diffusion-weighted acquisitions used on DTI vary between 6 and \todo{For very special cases ...}32, HARDI acquisitions have \todo{In competitions less number of acquisitions were applied ...}more than 45 \cite{descoteaux2015}.
 
-The most common method to visualize HARDI data through these advanced imaging methods is by spherical polar plot glyphs. These methods are represented by orientation distribution functions (ODF), which consists of an association of a set of directions, represented by unit vectors, to scalars that represents the diffusivity for each element in the domain.
+The most common method to visualize HARDI data through these advanced imaging methods is by spherical polar plot glyphs. These methods are represented by orientation distribution functions (ODF), which consists of an association of a set of directions, represented by unit vectors, to scalars that represent the diffusivity for each element in the domain.
 
 The spherical polar plot consists of the modulation of a sphere surface, where its radius points are scaled to its ODF values. To emphasize the orientational structure, it is useful to generate the glyphs using a min-max normalized version of the ODF \cite{TuchQBall2004}, as illustrated in Fig. \ref{fig::intro_glyph}. Eq. \ref{eq::normglifo} presents the spherical polar plot of the min-max normalized ODF $\psi(\bm{u})$.
 
@@ -252,15 +251,15 @@ This paper is divided in \ref{sec::conclusions} sections. In section \ref{sec::r
 
 
 
-Polygons-based glyph rendering schemes are an area that has not been much explored by the HARDI community. Shattuck et al. \cite{shattuck2008} presented in their work the rendering of these glyphs and reports a limitation in the rendering performance. The performance result reported by them were 10 FPS for a spherical mesh of 225 vertices and 2 million triangles being rendered. The authors did not detail their rendering scheme and did not take advantage of the GPU programming to improve it, as we show in this work.
+Polygons-based glyph rendering schemes are an area that has not been much explored by the HARDI community. Shattuck et al. \cite{shattuck2008} presented the rendering of these glyphs and reports a limitation in the rendering performance. The performance result reported by them were 10 FPS for a spherical mesh of 225 vertices and 2 million triangles being rendered. The authors did not detail their rendering scheme and did not take advantage of the GPU programming to improve it, as we show in this work.
 %ALGO RELEVANTE: ESSE TRABALHO DO SHATTUCK É O ÚLTIMO DA ÁREA QUE TEM ALGUMA COISA A VER COM O MEU, QUE É RENDERIZAR GLIFOS HARDI EM TEMPO REAL VIA POLIGONOS.
 
 
 % \sout{ and imply that they were not programming the GPU. It is worth mentioning that instance rendering was not released back then}.
 
-Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyphs as an alternative to the polygon-based previous works and achieved better performance results. In their approach, each glyph's CPU-GPU data traffic consists of coefficients of spherical harmonics for a GPU-based ray casting algorithm. This approach was further improved until.......!!!
+Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyphs as an alternative to the polygon-based previous works and achieved better performance results. In their approach, each glyph's CPU-GPU data traffic consists of coefficients of spherical harmonics for a GPU-based ray casting algorithm. They also compare their approach to the polygon based rendering scheme proposed by Shattuck et al. \cite{shattuck2008}.  This approach was further improved until.......!!!
 
-Voltoline et al. \cite{voltoline2021} proposed a real-time rendering scheme for a glyph representation of diffusion tensor called superquadrics \cite{Kindlmann2004}. In their work, they minimize the CPU-GPU data traffic to a few parameters that customize the glyphs in each drawing request using the instance rendering technique, obtaining state-of-the-art performance results. These results influenced us to adapt their scheme in our HARDI glyph rendering scheme.
+Voltoline et al. \cite{voltoline2021} proposed a real-time rendering scheme for a glyph representation of diffusion tensor called superquadrics \cite{Kindlmann2004}. In their work, they minimize the CPU-GPU data traffic to a few parameters that customize the glyphs in each drawing request using the instance rendering technique, obtaining interactive performance results. These results influenced us to adapt their scheme in our HARDI glyph rendering scheme.
 
 %\todo[inline]{It is important to cite Voltoline's work.}
 
@@ -296,7 +295,21 @@ The scheme's precomputation consists of setting a mesh of a unit sphere centered
 
 Two elements customize each one of the glyphs: ODF samples and their position. These elements are sent to the GPU in every draw request.
 
-First, lets define the vector set $\Upsilon = \{\bm{u}_k | \bm{u}_k = \frac{P_k - O}{|P_k - O|}, \forall P_k \in \Pi\ \text{and O is the center of the sphere}\}$. The glyph geometry is deformed by scaling each point $P_k$ in the mesh to ODF value $\psi(\bm{u}_k)$ before translating it. The translation matrix places the deformed spherical mesh to be centered at a point $C(x, y, z)$. 
+First, let us define the vector set $\Upsilon$ as a function of $\Pi$ as shown in Eq. \ref{eq::u_vector_set}. The glyph geometry is deformed by scaling each point $P_k$ in the mesh to ODF value $\psi(\bm{u}_k)$ before translating it. The translation matrix places the deformed spherical mesh to be centered at a point $C(x, y, z)$.
+
+\begin{equation}
+\label{eq::u_vector_set}
+\Upsilon = \{\bm{u}_k | \bm{u}_k = \frac{P_k - O}{|P_k - O|}, 
+\begin{tabular}{@{}c@{}}
+\small{$\forall P_k \in \Pi; O$ is the origin} \\
+\small{and center of the sphere}
+
+\end{tabular}
+\text{ }\}
+\end{equation}
+
+%\forall P_k \in \Pi ; O \text{ is the origin } \\
+%\text{}
 
 Due to the large amount of data sent to the GPU in the drawing requests, the goal of this subsection is to show a way to organize the data in the CPU, how to send it to the GPU, and how the GPU shaders read it, so the CPU-GPU data traffic is as minimum as possible. %In this subsection, we are going to describe the general data structures of the data and in the subsection \ref{ssec::optimization}, we present an optimization of the scheme for ODFs that have symmetry.
 
@@ -492,7 +505,32 @@ Fig. \ref{fig::ex_glyph} shows glyphs for different meshes. Fig. \ref{fig::ex_gl
 
 \subsection{Performance}
 
-In the tables !!refTable follows the benchmark of the rendering scheme. The benchmark on the data structures setup, CPU-GPU traffic and the GPU processing and drawing time. The data structures setup process is accelerated by using CPU parallelism. %If the ODFs are stored as coefficients of spherical harmonics, it needs a step of sampling over a spherical mesh.
+In Fig. \ref{fig::benchmark_full} and \ref{fig::benchmark_half} follows the benchmark of the rendering scheme without and with the optimization for symmetrical ODFs. The data structures setup process is accelerated by using CPU parallelism. The computer used was a Macbook Pro Retina 13' early 2015, with an Intel Core i5 Dual-Core 2.7GHz CPU, 8 GB RAM and a Intel Iris 6100 GPU with 1536 MB.
+
+
+\begin{figure}[t]
+\centering
+\captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
+    \subfloat[General rendering scheme for ODFs benchmark ]{\includegraphics[width=1.\linewidth, angle=0]{figs/Benchmark/benchmark_full.png}
+    \label{fig::benchmark_full}
+    }
+    \\
+    \subfloat[Optimized rendering scheme for symmetrical ODFs benchmark ]{\includegraphics[width=1.\linewidth, angle=0]{figs/Benchmark/benchmark_half.png}
+    \label{fig::benchmark_half}
+    }
+    \\
+     \caption{Glyph rendering FPS vs number of glyphs being rendered. The blue, orange and green curves correspond to a spherical mesh of 162, 642, 2462 vertices respectively. These meshes are generated by $4^{th}$, $8^{th}$ and $16^{th}$ order tessellation of the icosahedron} %!!VER SE ISSO TA CERTO
+    \label{fig::benchmark}
+\end{figure}
+
+The results indicates that our scheme gives satisfactory results for interactive usage. Using this scheme, it is possible to render thousands of glyphs in interactive rates using a $4^{th}$ order tessellation of the icosahedron and hundreds with $16^{th}$ order, as shown in Fig. \ref{fig::benchmark_half}.
+
+There is a relevant performance difference in the scheme by taking advantage of the ODF's symmetry. For example, in the 642 vertices spherical mesh, without optimization, the graphic hits 60 FPS with less than 2000 glyphs rendered, while taking advantage of the symmetry of ODFs makes it possible to render 4000 and obtaining similar performance.
+
+
+
+
+%If the ODFs are stored as coefficients of spherical harmonics, it needs a step of sampling over a spherical mesh.
 
 
 %Mention comparison with raycasting methods
@@ -508,11 +546,11 @@ In the tables !!refTable follows the benchmark of the rendering scheme. The benc
 
 \subsection{Discussion}
 
-Albeit we presented means to decrease CPU-GPU data traffic on this polygon-based approach, it is still much higher than the ray casting approaches. In their work, Peeters et. al. \cite{peeters2009} mentions a data-traffic of 15 spherical harmonics coefficients per glyph and obtain smoother results than $3^{rd}$ and $4^{th}$ order tessellation of an icosahedron, whereas these rendering strategies makes possible to increase the resolution of the sphere.
+Albeit we presented means to decrease CPU-GPU data traffic on this polygon-based approach, it is still much higher than the ray casting approaches. In their work, Peeters et al. \cite{peeters2009} mentions a data-traffic of 15 spherical harmonics coefficients per glyph and obtain smoother results than $3^{rd}$ and $4^{th}$ order tessellation of an icosahedron. In contrast, these rendering strategies makes possible to increase the resolution of the sphere.
 
-In our approach, the GPU shaders are much simpler, since it only does lookup on a texture and per-vertex linear transformations, where in ray casting approaches it.
+In our approach, the GPU shaders are much simpler since it only does a lookup on a texture and per-vertex linear transformations, wherein ray casting approaches it.
 
-In MRI visualization tools, one may code an HARDI ODFs in two different ways: samples on a sphere and spherical harmonics coefficients. This rendering scheme is straight forward to be used when the data is coded in samples on a sphere, but this way to code HARDI data can be very memory demanding.
+In MRI visualization tools, one may code a HARDI ODFs in two different ways: samples on a sphere and spherical harmonics coefficients. This rendering scheme is straightforward to be used when the data is coded in samples on a sphere, but this way to code HARDI data can be very memory demanding.
 
 
 
@@ -525,9 +563,18 @@ In this work, we presented a rendering scheme to render multiple ODFs at interac
 
 We also suggested an optimization procedure to decrease the data computation and CPU-GPU data traffic by half on symmetrical ODFs.
 
-The rendering scheme proved to be fast enough to render hundreds of objects using meshes that are fine sufficiently to make the surfaces appear smooth.
+The rendering scheme proved to be fast enough to render hundreds and thousands of objects using meshes that are fine sufficiently to make the surfaces appear smooth.
 
-That scheme can be integrated with other DW-MRI and MRI visualization schemes. It can be a handy tool to render each ODF's glyph on its respective voxel in the scene.
+This scheme can be integrated with other DW-MRI and MRI visualization schemes. It can be a handy tool to render each ODF's glyph on its respective voxel in the scene.
+
+\subsection{Future works}
+
+For future works, we will do the following investigations:
+\begin{itemize}
+\item provide in depth a performance comparison between the ray casting approach with the approach suggested in this work;
+\item adapt the scheme by changing the data that customize the glyphs from ODF samples to spherical harmonics basis coefficients and compute its samples in GPU;
+\item investigate strategies to change the spherical mesh as a function of the amount and size of glyphs to be rendered in a drawing request, giving the possibility of decreasing its number of vertices in situations where glyphs are small and/or in high number in the scene.
+\end{itemize}
 
 
 

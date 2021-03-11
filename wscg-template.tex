@@ -511,11 +511,11 @@ In Fig. \ref{fig::benchmark_full} and \ref{fig::benchmark_half} follows the benc
 \begin{figure}[t]
 \centering
 \captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
-    \subfloat[General rendering scheme for ODFs benchmark ]{\includegraphics[width=1.\linewidth, angle=0]{figs/Benchmark/benchmark_full.png}
+    \subfloat[General rendering scheme for ODFs benchmark ]{\includegraphics[width=.99\linewidth, angle=0]{figs/Benchmark/benchmark_full.png}
     \label{fig::benchmark_full}
     }
     \\
-    \subfloat[Optimized rendering scheme for symmetrical ODFs benchmark ]{\includegraphics[width=1.\linewidth, angle=0]{figs/Benchmark/benchmark_half.png}
+    \subfloat[Optimized rendering scheme for symmetrical ODFs benchmark ]{\includegraphics[width=.99\linewidth, angle=0]{figs/Benchmark/benchmark_half.png}
     \label{fig::benchmark_half}
     }
     \\
@@ -550,7 +550,7 @@ Albeit we presented means to decrease CPU-GPU data traffic on this polygon-based
 
 In our approach, the GPU shaders are much simpler since it only does a lookup on a texture and per-vertex linear transformations, wherein ray casting approaches it.
 
-In MRI visualization tools, one may code a HARDI ODFs in two different ways: samples on a sphere and spherical harmonics coefficients. This rendering scheme is straightforward to be used when the data is coded in samples on a sphere, but this way to code HARDI data can be very memory demanding.
+In MRI visualization tools, one may code a HARDI ODFs in two different ways: samples on a sphere and spherical harmonics coefficients. This rendering scheme is straightforward to be used when the data is coded in samples on a sphere, but approach to store HARDI data can be very memory demanding.
 
 
 

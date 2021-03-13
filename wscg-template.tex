@@ -207,7 +207,7 @@ The spherical polar plot consists of the modulation of a sphere surface, where i
 
 %where $R(\bm{u})$ is the length of a deformed sphere in the direction $\bm{u}$.
 
-These glyphs provide a clear visualization of local diffusion through its ODF samples. Researchers use them to validate an imaging method \cite{descoteaux2007_QBI,  TuchQBall2004,tournier2007,Tournier2004DirectEO, tuch2002,  yeh2010} and assess the local relationship between the acquisition quality, the imaging method, and the underlying fiber orientation distribution (FOD) computed \cite{cho2008, daducci2014,descoteaux2007,  vega2009}. %The FODs extracted from an imaging method applied to a DWI acquisition are used as input of fiber tracking algorithms. %The conjecture of the possibility of brain connectivity from the DWI acquisitions motivates this research area's main motivation.
+These glyphs provide a clear visualization of local diffusion through its ODF samples. Researchers use them to validate imaging methods \cite{descoteaux2007_QBI,  TuchQBall2004,tournier2007,Tournier2004DirectEO, tuch2002,  yeh2010} and assess the local relationship between the acquisition quality, the imaging method, and the underlying fiber orientation distribution (FOD) computed \cite{cho2008, daducci2014,descoteaux2007,  vega2009}. %The FODs extracted from an imaging method applied to a DWI acquisition are used as input of fiber tracking algorithms. %The conjecture of the possibility of brain connectivity from the DWI acquisitions motivates this research area's main motivation.
 
 %\todo{Insert a figure to help in understanding.}These glyphs\textcolor{blue}{, as illustrated in Fig~\ref{???},} \sout{give}\textcolor{blue}{provide} a clear visualization of local \sout{information in} diffusion \sout{imaging methods} \textcolor{blue}{in each voxel}. \sout{It is used by} \todo{References?}Researchers use them to \todo{???}\textcolor{red}{assess the acquisition quality,} \sout{attest the validity of}\textcolor{blue}{validate} an imaging method, \sout{the adequability of it given an acquisition} and \sout{the} check the relationship between the \textcolor{blue}{applied} imaging method \sout{used with} \textcolor{blue}{and the} fiber reconstruction algorithms called tractography.
 
@@ -222,7 +222,7 @@ In the brain anatomical axes, the red color represents the mediolateral directio
 
 %\todo[inline]{I suggest writing motivation to this work: the challenging remaining problems and the one you are supposed to solve.}
 
-In this work, we present an interactive GPU-accelerated rendering scheme of multiple spherical polar plots from ODF samples. We applied instance rendering to reduce the CPU-GPU data traffic.%\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
+In this work, we present an interactive GPU-accelerated polygon-based rendering scheme of multiple spherical polar plots from ODF samples. We applied instance rendering to reduce the CPU-GPU data traffic.%\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
 
 %In this work, we present a\textcolor{blue}{n interactive GPU-accelerated} rendering scheme \sout{that aims to, given samples of ODFs associated with a spherical mesh, we} \textcolor{blue}{to} render a set of spherical polar plot\textcolor{blue}{s from ODF samples}. \textcolor{blue}{Inspired by Voltoline and Wu's work, we applied instance rendering and transform feedback to reduce the CPU-GPU data traffic.}\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
 
@@ -483,34 +483,48 @@ $\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm
 
 \section{Results}
 \label{sec::results}
-Fig. \ref{fig::ex_glyph} shows glyphs for different meshes. Fig. \ref{fig::ex_glyph_FAMAP} shows an application of the proposed scheme integrated into a DWI visualization system.
 
-\begin{figure}[t]
+\subsection{Visual aspects}
+
+Fig. \ref{fig::ex_glyph} shows glyphs for different meshes. One can see that a spherical mesh defined by an $8^{th}$ (Fig. \ref{fig::ex_glyph8}) tessellation order of the icosahedron is fine enough that does not have much visual difference compared to the $16^{th}$ order (Fig. \ref{fig::ex_glyph16}).
+
+
+Fig. \ref{fig::ex_glyph_DWI_visualization} shows an application of the proposed scheme integrated into a DWI visualization system.
+
+\begin{figure}[h]
 \centering
 \captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
-    \subfloat[4-th order (162 vertices and 320 triangles per glyph) ]{\includegraphics[width=.75\linewidth, angle=0]{figs/Results/Glyphs_4.png}}
+    \subfloat[4-th order (162 vertices and 320 triangles per glyph) ]{\includegraphics[width=.75\linewidth, angle=0]{figs/Results/Glyphs_4.png}
+    \label{fig::ex_glyph4}
+    }
     \\
-    \subfloat[8-th order (642 vertices and 1280 triangles per glyph) ]{\includegraphics[width=.70\linewidth, angle=0]{figs/Results/glyphs_8.png}}
+    \subfloat[8-th order (642 vertices and 1280 triangles per glyph) ]{\includegraphics[width=.70\linewidth, angle=0]{figs/Results/glyphs_8.png}
+    \label{fig::ex_glyph8}
+    }
     \\
-    \subfloat[16th order (2562 vertices and 5120 triangles per glyph)]{\includegraphics[width=.70\linewidth, angle=0]{figs/Results/glyphs_16.png}}
-     \caption{Polygon based HARDI glyphs visualization for different orders of tessellationts of an icosahedron. The glyphs refer to the same DWI samples. The method used to generate is the Generalized Q-Sampling Imaging (GQI) \cite{yeh2010}} %!!VER SE ISSO TA CERTO
+    \subfloat[16th order (2562 vertices and 5120 triangles per glyph)]{\includegraphics[width=.70\linewidth, angle=0]{figs/Results/glyphs_16.png}
+    \label{fig::ex_glyph16}
+    }
+     \caption{Polygon based HARDI glyphs visualization for different orders of tessellation of an icosahedron. The glyphs refer to the same DWI samples. The method used to generate is the Generalized Q-Sampling Imaging (GQI) \cite{yeh2010}} %!!VER SE ISSO TA CERTO
     \label{fig::ex_glyph}
 \end{figure}
 
-\begin{figure}[htb]
-    \centering
+
+
+%\begin{figure}[h]
+    %\centering
     %\rule{6cm}{3cm}
-    \includegraphics[width=1.00\linewidth, angle=0]{figs/Results/Glyphs_onFAMAP_2.png}
-    \caption{Glyphs integrated into a DW-MRI's fractional anisotropy map. The parallelepiped shows the region where the pyramidal tract (glyphs predominantly blue) crosses the corpus callosum (predominantly red). In the middle of the left face, the predominantly green glyphs corresponds to the region of the superior longitudinal fasciculus. The spherical mesh used corresponds to an 8-th tessellated icosahedron}
-    \label{fig::ex_glyph_FAMAP}
-\end{figure}
+    %\includegraphics[width=1.00\linewidth, angle=0]{figs/Results/Glyphs_onFAMAP_2.png}
+    %\caption{Glyphs integrated into a DW-MRI's fractional anisotropy map. The parallelepiped shows the region where the pyramidal tract (glyphs predominantly blue) crosses the corpus callosum (predominantly red). In the middle of the left face, the predominantly green glyphs corresponds to the region of the superior longitudinal fasciculus. The spherical mesh used corresponds to an 8-th tessellated icosahedron}
+    %\label{fig::ex_glyph_FAMAP}
+%\end{figure}
 
 \subsection{Performance}
 
 In Fig. \ref{fig::benchmark_full} and \ref{fig::benchmark_half} follows the benchmark of the rendering scheme without and with the optimization for symmetrical ODFs. The data structures setup process is accelerated by using CPU parallelism. The computer used was a Macbook Pro Retina 13' early 2015, with an Intel Core i5 Dual-Core 2.7GHz CPU, 8 GB RAM and a Intel Iris 6100 GPU with 1536 MB.
 
 
-\begin{figure}[t]
+\begin{figure}[h]
 \centering
 \captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
     \subfloat[General rendering scheme for ODFs benchmark ]{\includegraphics[width=.99\linewidth, angle=0]{figs/Benchmark/benchmark_full.png}
@@ -527,7 +541,7 @@ In Fig. \ref{fig::benchmark_full} and \ref{fig::benchmark_half} follows the benc
 
 The results indicates that our scheme gives satisfactory results for interactive usage. Using this scheme, it is possible to render thousands of glyphs in interactive rates using a $4^{th}$ order tessellation of the icosahedron and hundreds with $16^{th}$ order, as shown in Fig. \ref{fig::benchmark_half}.
 
-There is a relevant performance difference in the scheme by taking advantage of the ODF's symmetry. For example, in the 642 vertices spherical mesh, without optimization, the graphic hits 60 FPS with less than 2000 glyphs rendered, while taking advantage of the symmetry of ODFs makes it possible to render 4000 and obtaining similar performance.
+There is a relevant performance difference in the scheme by taking advantage of the ODF's symmetry. For example, in the 642 vertices spherical mesh, without optimization, the graphic hits 60 FPS with less than 2000 glyphs rendered, while taking advantage of the symmetry of ODFs makes it possible to render 4000, obtaining similar performance.
 
 
 
@@ -539,32 +553,57 @@ There is a relevant performance difference in the scheme by taking advantage of 
 
 
 
-\subsection{\textcolor{blue}{An Application}}
+\subsection{Application}
 
-The proposed rendering scheme has been implemented in a multimodal visualization environment to DWI. In this environment, there is a raycasting based rendering for MRI/DWI volumes and a system for appearing samples detection, which is proposed and described by Voltoline et al. \cite{voltoline2021}.
+In this section, we describe the implementation of the rendering scheme in a multimodal visualization environment with DWI functionalities \cite{VMTKNeuro}. In this environment, there is a ray casting based rendering for MRI/DWI volumes and a system for appearing samples detection, which is proposed and described by Voltoline et al. \cite{voltoline2021}. Fig. \ref{fig::ex_glyph_DWI_visualization} shows an result of the proposed rendering scheme applied to this environment.
 
-In this environment, a HARDI method is computed through its samples in a hemisphere of a spherical mesh for all voxels contained in a DWI. The visualization system renders the DWI volume, with the option to corregister with an anatomical T1, detect the voxels appearing on screen and reference the pre computed HARDI data, to compute $\mathbf{Psi}^h$.
+\begin{figure}[h]
+    \centering
+    %\rule{6cm}{3cm}
+    \includegraphics[width=1.00\linewidth, angle=0]{figs/Results/glyphs_integrated_DWI.png}
+    \caption{Glyphs integrated into a DW-MRI's visualization scheme. The region shows the midsection of a axial region of the brain, with a plane cutting in the left side%. The spherical mesh used corresponds to an 8-th tessellated icosahedron
+    }
+    \label{fig::ex_glyph_DWI_visualization}
+\end{figure}
 
-More details of the approach on detecting appearing samples can be found on Voltoline et al. work \cite{voltoline2021}.
+In this environment, a HARDI method is computed through its samples in a hemisphere of a spherical mesh for all voxels contained in a DWI, as well with their respectives translation coordinates to its center in the volume space. The visualization system renders the DWI volume, with the option to co-register with its respective anatomical T1 MRI. There is a functionality to detect the samples appearing on screen, returning their respective indexes of the volume. From these indexes, the buffer for the translation coordinates set and their respective HARDI data are set up to be sent to GPU as discussed in subsection \ref{ssec::datastruct}. The computation from the HARDI data to $\bm{\Psi^h}$ is illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}.
 
-The Fig. \ref{fig::ex_glyph_FAMAP}
+\begin{figure}[h]
+    \centering
+    %\rule{6cm}{3cm}
+    \includegraphics[width=0.89\linewidth, angle=0]{figs/rendering_scheme/organizacao2GPU_red1.png}
+    \caption{Rendering scheme applied to a DWI visualization scheme. For each one of the $S$ DWI's samples, its respective ODF is pre-computed in $N$ samples in an hemisphere. The $P$ red-contoured ODFs are requested to be drawn, thus setting up the matrix $\bm{\Psi^{h}}$ and sent to the GPU. The ODF set can refer to a slice, for example}
+    \label{fig::vmtk_precomputed2GPU}
+\end{figure}
+
 
 %\todo[inline]{To assess the fiber orientations locally?}
 
-\subsection{Visual Aspects}
-
-
 \subsection{Discussion}
 
-Albeit we presented means to decrease CPU-GPU data traffic on this polygon-based approach, it is still much higher than the ray casting approaches.In their work, Peeters et al. \cite{peeters2009} mentions a data-traffic of 15 spherical harmonics coefficients per glyph and obtain smoother results than $3^{rd}$ and $4^{th}$ order tessellation of an icosahedron.
+One can make a comparison in an scheme where the per-glyph data traffic consists of vertices of triangles. Let us consider a N-size spherical mesh, where each point is a vertex of 6 triangles, which is characteristic of a tessellated icosahedron. The data traffic of our approach per glyph consists consists of N/2 floats plus one copy of translate coordinates, the customization of the glyphs are done per vertex in parallel in the GPU. The information on how to set the triangles are provided in the initialization process.
+
+The polygon based approach proposed by Shattuck et al. \cite{shattuck2008} does not bring the discussion on the data structures sent to GPU in each drawing request and mention that they did not use GPU programming, furthermore, instance rendering was not available when the work was proposed. Certainly the glyph customization is done in CPU and the data traffic CPU-GPU consisted of a set of vertices extracted from the used spherical mesh with some redundancy, so the API can form triangles. It means that the amount of vertices data sent is higher than N, corresponding to more than 3*N floats for each glyph. Hence, the data traffic of our approach is less than 1/6 for the same spherical mesh.
+
+%In our approach, that amount of data traffic goes to N/2 floats. Other polygon-based approaches, such as using sending vertices of the glyphs associated to an index buffer, makes the data traffic go to 3N floats plus the size of index buffer and, additionally, regarding translation coordinates, one can choose to send this data as an attribute per vertex and increase the data traffic by 3N floats and do on GPU's threads, or the operation can be done on CPU, which is less efficient than sending once per geometry.
+
+%Shattuck et al. \cite{shattuck2008}  do not discuss the data structures sent to GPU in each drawing request and mention that they did not use GPU programming, so 
+
+%the data traffic to setup a glyph is 6 times the same (x,y,z) coordinate of the modulated point, which translate to 18*N floats. If using triangle fan, where the same vertice can define two triangles, that amount goes to 9*N floats
+
+
+
+Albeit we presented means to decrease CPU-GPU data traffic on this polygon-based approach, it is still much higher than the ray casting approaches. In their work, Peeters et al. \cite{peeters2009} mentions a data-traffic of 15 spherical harmonics coefficients per glyph and obtain smoother results than $3^{rd}$ and $4^{th}$ order tessellation of an icosahedron.
 
 
 In contrast, these rendering strategies makes possible to increase the resolution of the sphere.
 
-%Falar da simplicidade é algo relevante?
-In our approach, the GPU shaders are much simpler than the raycasting approach since it only does a lookup on a texture and per-vertex linear transformations, while ray casting approaches bring are more computationally expensive.
+In comparison with Peeters et al. \cite{peeters2009}, our approach has much more data traffic, but the GPU shaders are much simpler an less intensive computationally than the approach suggested in their work.
 
-In MRI visualization tools, one may code a HARDI ODFs in two different ways: samples on a sphere and spherical harmonics coefficients. This rendering scheme is straightforward to be used when the data is coded in samples on a sphere, but approach to store HARDI data can be very memory demanding.
+%Falar da simplicidade é algo relevante?
+%In our approach, the GPU shaders are much simpler than the raycasting approach since it only does a lookup on a texture and per-vertex linear transformations, while ray casting approaches bring are more computationally expensive.
+
+%In MRI visualization tools, one may code a HARDI ODFs in two different ways: samples on a sphere and spherical harmonics coefficients. This rendering scheme is straightforward to be used when the data is coded in samples on a sphere, but approach to store HARDI data can be very memory demanding.
 
 
 
@@ -579,7 +618,7 @@ We also suggested an optimization procedure to decrease the data computation and
 
 The rendering scheme proved to be fast enough to render hundreds and thousands of objects using meshes that are fine sufficiently to make the surfaces appear smooth.
 
-This scheme can be integrated with other DW-MRI and MRI visualization schemes. It can be a handy tool to render each ODF's glyph on its respective voxel in the scene.
+This scheme can be integrated with other DW-MRI and MRI visualization schemes and we exemplified an application. %It can be a useful tool to render each ODF's glyph on its respective area in the scene.
 
 \subsection{Future works}
 

@@ -277,12 +277,14 @@ Our goal is to show the rendering scheme of the glyphs to be shown in the scene.
 
 %\todo[inline]{An overview of the proposal. It could be a flowchart}
 
-\subsection{Precomputation on the CPU}
+\subsection{Initialization}
 \label{ssec::precomputation}
 
-The glyphs consist of spheres with each one of its radius points deformed by its respective ODF value.
+%The glyphs consist of spheres with each one of its radius points deformed by its respective ODF value.
 
-The scheme's precomputation consists of setting a mesh of a unit sphere centered in the origin of N point set $ \Pi = \{P_1, P_2, \dots, P_N\}$ and its respective index buffer and send to the GPU only once as an attribute to be instanced.
+The scheme's initialization consists on the setup of a mesh of a unit sphere centered in the origin with N points set $\Pi = \{P_1, P_2, \dots, P_N\}$. The mesh is sent to the GPU with non repeated points, along with its respective index buffer, only once as an attribute to be instanced.
+
+
 
 %\todo[inline]{What to be rendered? At least a paragraph explaining the objects to be rendered. Spheres deformed by ODFs?}
 
@@ -454,7 +456,7 @@ Hence, we define a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ such that $\bm{\psi^h}_{
 \endgroup
 \end{equation*}
 
-$\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm{\Psi}$ described in the subsection,\ref{ssec::datastruct} and the difference lies in the lookup process. On the GPU, the vertices corresponding to the 2k-th and (2k+1)-th Vertex\_ID in the spherical mesh of the same instance have the same value to lookup\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi^h}$, ivec2(gl\_InstanceID, gl\_VertexID/2), 0)[0]}, corresponding to the k-th column, which can be accessed accordingly in the vertex shader.
+$\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm{\Psi}$ described in the subsection \ref{ssec::datastruct} and the difference lies in the lookup process. On the GPU, the vertices corresponding to the 2k-th and (2k+1)-th Vertex\_ID in the spherical mesh of the same instance have the same value to lookup\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi^h}$, ivec2(gl\_InstanceID, gl\_VertexID/2), 0)[0]}, corresponding to the k-th column, which can be accessed accordingly in the vertex shader.
 
 %\sout{In}\textcolor{blue}{On} the GPU, the  in $\bm{\Psi}^h$, which corresponds to the K-th index of the matrix, which can be accessed accordingly in the vertex shader.
 
@@ -561,7 +563,7 @@ In this section, we describe the implementation of the rendering scheme in a mul
     \centering
     %\rule{6cm}{3cm}
     \includegraphics[width=1.00\linewidth, angle=0]{figs/Results/glyphs_integrated_DWI.png}
-    \caption{Glyphs integrated into a DW-MRI's visualization scheme. The region shows the midsection of a axial region of the brain, with a plane cutting in the left side%. The spherical mesh used corresponds to an 8-th tessellated icosahedron
+    \caption{Glyphs integrated into a DW-MRI's visualization scheme. The glyphs are located in a midaxial region of the brain, cutted in the left side %. The spherical mesh used corresponds to an 8-th tessellated icosahedron
     }
     \label{fig::ex_glyph_DWI_visualization}
 \end{figure}

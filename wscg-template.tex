@@ -54,6 +54,7 @@
 
 \usepackage{nopageno}       % no page numbers at all; uncomment for final version
 \usepackage{bm} 
+\usepackage{amsmath,amsfonts,amssymb}
 
 
 
@@ -305,8 +306,10 @@ First, let us define the vector set $\Upsilon$ as a function of $\Pi$ as shown i
 \label{eq::u_vector_set}
 \Upsilon = \{\bm{u}_k | \bm{u}_k = \frac{P_k - O}{|P_k - O|}, 
 \begin{tabular}{@{}c@{}}
-\small{$\forall P_k \in \Pi; O$ is the origin} \\
-\small{and center of the sphere}
+\small{$\forall P_k \in \Pi; O$ is the origin in } \\
+\small{$\mathbb{R}^3$ and sphere's center}
+
+
 
 \end{tabular}
 \text{ }\}
@@ -326,7 +329,7 @@ Due to the large amount of data sent to the GPU in the drawing requests, the goa
 %\sout{In this rendering scheme, the set consisting of the translation matrices and the ODF profiles consists are sent from the CPU to the GPU in each drawing request. Hence, in order to achieve the goal of interactivity, it is desirable that the data traffic between both parts is as little as possible.}
 
 \subsubsection{Translation}
-Let P be the number of instances of the rendering scheme and glyphs to be drawn. The translation points are organized as a vector of points $[C_1,C_2, \dots, C_P]$, where $C_i = (x_i, y_i, z_i)$, and sent to the GPU as an attribute. Each point of this attribute is unique for each one of the P instances of the spherical mesh.
+Let $M$ be the number of glyphs to be drawn, corresponding to the amount of instances of the spherical mesh as well. The translation points are organized as a vector of points $[C_1,C_2, \dots, C_M]$, where $C_i= C_i(x_i, y_i, z_i)$, and sent to the GPU as an attribute. Each point of this attribute is unique for each one of the $M$ instances of the spherical mesh.
 
 %The i-th index of the matrices set vector refers to the spherical mesh's i-th instance to be rendered centered at the point $C_i(x_i, y_i, z_i)$.
 
@@ -336,7 +339,7 @@ Let P be the number of instances of the rendering scheme and glyphs to be drawn.
 
 \subsubsection{ODFs}
 
-The ODF data sent to GPU consists of the N samples referring to the diffusion profiles for each P glyphs to be drawn. We construct a $\bm{\Psi}_{PxN}$ matrix, where P is the number of glyphs to be drawn, and N is the number of samples of ODF used, as given in Eq. \ref{eq::Psi}:
+The ODF data sent to GPU consists of the N samples referring to the diffusion profiles for each $M$ glyphs to be drawn. We construct a $\bm{\Psi}_{MxN}$ matrix, where $M$ is the number of glyphs to be drawn, and $N$ is the number of samples of ODF used, as given in Eq. \ref{eq::Psi}:
 
 \begin{equation}
 \label{eq::Psi}
@@ -347,20 +350,20 @@ The ODF data sent to GPU consists of the N samples referring to the diffusion pr
     \psi_1(\bm{u}_1) & \psi_1(\bm{u}_2) & \cdots \psi_1(\bm{u}_{N-1}) & \psi_1(\bm{u}_{N})  \\    
      \psi_2(\bm{u}_1)& \psi_2(\bm{u}_2) & \cdots \psi_2(\bm{u}_{N-1}) & \psi_2(\bm{u}_{N}) \\
     \vdots & \vdots & \vdots & \vdots  \\    
-     \psi_P(\bm{u}_1)&\psi_P(\bm{u}_2) & \cdots \psi_P(\bm{u}_{N-1}) & \psi_P(\bm{u}_{N})
-\end{bmatrix}, 
+     \psi_M(\bm{u}_1)&\psi_M(\bm{u}_2) & \cdots \psi_M(\bm{u}_{N-1}) & \psi_M(\bm{u}_{N})
+\end{bmatrix}
 \endgroup
 \end{equation}
 
-where $\psi_{ij}$ refers to the ODF value $\psi_i(\bm{u}_j)$ of the i-th glyph associated with the direction $\bm{u}_j$, which scales the $P_j$ vertex of the spherical mesh. The $\bm{\Psi}_{PxN}$ matrix is sent to the GPU as a 2D texture.
+where $\psi_{ij}$ refers to the ODF value $\psi_i(\bm{u}_j)$ of the i-th glyph associated with the direction $\bm{u}_j$, which scales the  vertex $P_j$ of the spherical mesh. $\bm{\Psi}_{MxN}$ is sent to the GPU as a 2D texture.
 
 On the GPU, the access of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader.
 
-The instance index (Instance\_ID) corresponds to an instanced spherical mesh centered in its respective point $P$, and since ODFs samples of one glyph are stored in the rows of $\bm{\Psi}$, the Instance\_ID access this dimension.
+The k-th instance index (Instance\_ID) corresponds to an instanced spherical mesh centered in its respective point $C_k$, and since ODFs samples of this glyph are stored in the k-th row of $\bm{\Psi}$, the Instance\_ID access this dimension.
 
 The vertex index (Vertex\_ID), in its turn, indicates a point of the spherical mesh, which corresponds to the column of its respective ODF value in $\bm{\Psi}$.
 
-Hence, we perform the GPU access by a single lookup of the texture texel\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi}$, ivec2(gl\_InstanceID, gl\_VertexID), 0)[0]} using the Vertex\_ID and Instance\_ID pair. Fig.\ref{fig::GPU2glyph} illustrates the ODF access for each instance and vertex in the GPU.
+Hence, the GPU access is performed by a simple lookup of the texture texel\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi}$, ivec2(gl\_InstanceID, gl\_VertexID), 0)[0]} using the Vertex\_ID and Instance\_ID pair. Fig.\ref{fig::GPU2glyph} illustrates the ODF access for each instance and vertex in the GPU.
 
 %(MESMO PARÁGRAFO ACIMA, COM INDICAÇÕES OPENGL)The access in the GPU of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader. To achieve this, it is necessary that the vertex index (Vertex\_ID) (gl\_VertexID\footnotemark) of the direction of each vertex correspond to the column of its respective ODF value $ \psi (\bm{u}_j) $ in diffusion profile matrix. The access of the rows of the diffusion profile matrix, corresponding to the diffusion profiles in its respective point is accessible by the instance index (gl\_InstanceID\footnotemark [\value{footnote}]). Having the data organized in this established way, the access is done by perfoming a single lookup of the texel in the texture using the Vertex\_ID and Instance\_ID as a pair. In OpenGL, this can be done by the function texelFetch\footnotemark[\value{footnote}] with the row and column access arguments through the pair ( gl\_VertexID, gl\_InstanceID)\footnotemark [\value{footnote}] \footnotetext{All commands refer to OpenGL API and GLSL shading language.}. How to access the GPU of the profile matrix is illustrated in the Fig.\ref{fig::GPU2glyph}.
 
@@ -371,7 +374,7 @@ Hence, we perform the GPU access by a single lookup of the texture texel\footnot
     %\rule{6cm}{3cm}
     \includegraphics[width=1.0\linewidth, angle=0]{figs/rendering_scheme/GPU2Glyph.png}
     \caption{
-    Illustration of $\bm{\Psi}$ (in red) and its lookup procedure in the vertex shader by its Vertex\_ID and instance indexes for $P$ glyphs to be rendered. The data structure of $\Upsilon$ is in green. For an ODF $\psi_i(\bm{u})$, the value recovered for each $u_k$ scales its respective mesh point $P_k$, deforming it.
+    Illustration of $\bm{\Psi}$ (in red) and its lookup procedure in the vertex shader by its Vertex\_ID and instance indexes for $M$ glyphs to be rendered. The data structure of $\Upsilon$ is in green. For an ODF $\psi_i(\bm{u})$, the value recovered for each $\mathbf{u}_j$ scales its respective mesh point $P_j$, deforming it.
     %\textcolor{red}{Illustration of the data organization in the GPU of the profile matrix (red) sent as 2D-Texture. The vertices of the spherical mesh are in green. At each instance, the customization of the glyph occurs through the multiplication of the mesh vertex with its respective value, recovered in the vertex shader through its vertex index for the P glyphs to be rendered}.
     }
     \label{fig::GPU2glyph}
@@ -409,11 +412,11 @@ An ODF is symmetrical if $\psi(\bm{u}) = \psi(-\bm{u})$ for all $\bm{u}$ in the 
 
 Firstly, we suggest the use of a symmetrical spherical mesh. That means, if a point $P \in \Pi \implies -P \in \Pi$ as well. As an example, a mesh generated by any order of a tessellated icosahedron fits this criterion.
 
-Secondly, we recommend that the chosen symmetrical spherical mesh's data structure is organized so that a point $P$ in an even index is followed by $-P$. This spherical mesh is sent to the GPU in the same form as stated in the subsection \ref{ssec::precomputation}.
+Secondly, we recommend that the chosen symmetrical spherical mesh's data structure is organized so that a point $P$ in an even index is followed by $-P$. This spherical mesh is sent to the GPU in the same structure as stated in the subsection \ref{ssec::precomputation}.
 
 %\textcolor{red}{Firstly, we suggest the use of a symmetrical spherical mesh, which can be, for example, any order of a sphere \todo{How? It must be explained!}generated by a tessellated icosahedron. We suggest as well that the vector containing its vertices is organized in such a way that the vector in the (2k)-th index is symmetrical to the (2k+1)-th.}
 
-Following these recommendations, the data structure of points in the sphere $[P_1, P_2, P_3, P_4, \dots, P_{N-1}, P_N]$ becomes $[P_1, -P_1, P_3, -P_3, \dots, P_{N-1}, -P_{N-1}]$ and their associated $\Upsilon$ turns to $[\bm{u}_1, -\bm{u}_1, \bm{u}_3, -\bm{u}_3, \dots, \bm{u}_{N-1}, -\bm{u}_{N-1}]$. In this situation, $\bm{\Psi}$ is now:
+Following these recommendations, the data structure of points in the sphere $[P_1, P_2, P_3, P_4, \dots, P_{N-1}, P_N]$ becomes $[P_1, -P_1, P_3, -P_3, \dots, P_{N-1}, -P_{N-1}]$, their associated $\Upsilon$ turns to $[\bm{u}_1, -\bm{u}_1, \bm{u}_3, -\bm{u}_3, \dots, \bm{u}_{N-1}, -\bm{u}_{N-1}]$ and $\bm{\Psi}$ becomes:
 
 \begin{equation*}
 \bm{\Psi} = 
@@ -426,15 +429,15 @@ Following these recommendations, the data structure of points in the sphere $[P_
 
     \vdots & \vdots & \vdots & \vdots  \\
     
-     \psi_P(\bm{u}_1)&\psi_P(-\bm{u}_1) & \cdots \psi_P(\bm{u}_{N-1}) & \psi_P(-\bm{u}_{N-1})
+     \psi_M(\bm{u}_1)&\psi_M(-\bm{u}_1) & \cdots \psi_M(\bm{u}_{N-1}) & \psi_M(-\bm{u}_{N-1})
     
-\end{bmatrix},
+\end{bmatrix}
 \endgroup
 \end{equation*}
 
 where each of the (2k+1)-th column is the same as the (2k+2)-th ($0 \leq k < \frac{N}{2}$).
 
-Hence, we define a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ such that $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$, which is described in the expression below:
+Hence, we define a matrix $\bm{\Psi^h}_{Px\frac{M}{2}}$ such that $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$, which is described in the expression below:
 
 %\todo{Very confusing!}We \textcolor{blue}{re}define \textcolor{blue}{Eq. \ref{eq::Psi}}, \sout{a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ where} \textcolor{blue}{such that} $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$. \sout{that is sent to GPU on every drawing request. Its form is stated below:}\textcolor{blue}{It assumes the form}
 
@@ -450,7 +453,7 @@ Hence, we define a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ such that $\bm{\psi^h}_{
 
     \vdots & \vdots & \vdots & \vdots  \\
     
-     \psi_P(\bm{u}_1)&\psi_P(\bm{u}_3) & \cdots \psi_P(\bm{u}_{N-3}) & \psi_P(\bm{u}_{N-1})
+     \psi_M(\bm{u}_1)&\psi_M(\bm{u}_3) & \cdots \psi_M(\bm{u}_{N-3}) & \psi_M(\bm{u}_{N-1})
     
 \end{bmatrix}
 \endgroup

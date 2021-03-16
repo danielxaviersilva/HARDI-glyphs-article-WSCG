@@ -66,7 +66,7 @@
 \author{
 \parbox{0.25\textwidth}{\centering
 Daniel Xavier Silva\\[1mm]
-State University of Campinas,\\
+University of Campinas,\\
 %1st line of address\\
 %2nd line of address\\
 Brazil\\[1mm]
@@ -262,7 +262,7 @@ Voltoline et al. \cite{voltoline2021} proposed a real-time rendering scheme for 
 \section{ODF Glyph Rendering}
 \label{sec::odf_glyph_rendering}
 
-In this section, we discuss the rendering scheme of the glyphs to be shown in the scene. The subsection \ref{ssec::precomputation} describes the procedures that must be done at the initialization of the rendering scheme; in the subsection \ref{ssec::datastruct}, we describe the input data structures that customize the glyphs, which consist the most of the CPU-GPU data traffic, and an optimization for symmetrical ODFs; in the subsection \ref{ssec::rendering}, we provide a summary of the CPU and GPU division of tasks to the processed data.
+In this section, we discuss the rendering scheme of the glyphs to be shown in the scene. The subsection \ref{ssec::precomputation} describes the procedures that must be done at the initialization of the rendering scheme; in the subsection \ref{ssec::datastruct}, we describe the input data structures that customize the glyphs, which consist the most of the CPU-GPU data traffic, and an optimization for symmetrical ODFs; in the subsection \ref{ssec::rendering}, we provide a summary of the GPU shaders tasks.
 
 The number of samples that customize a glyph is usually in the hundreds \cite{TuchQBall2004, yeh2010}, yielding a high amount of data sent to GPU in every drawing request for multiples of them. Thus, the suggested procedures in the subsection \ref{ssec::datastruct} consists on strategies to minimize the data-traffic and are crucial to the scheme.
 
@@ -553,7 +553,7 @@ There is a relevant performance difference in the scheme by taking advantage of 
 
 \subsection{Application}
 
-In this section, we describe the implementation of the rendering scheme in a multimodal visualization environment with DWI functionalities \cite{VMTKNeuro}. In this environment, there is a ray casting based rendering for MRI/DWI volumes and a system for appearing samples detection, which is proposed and described by Voltoline et al. \cite{voltoline2021}. Fig. \ref{fig::ex_glyph_DWI_visualization} shows an result of the proposed rendering scheme applied to this environment.
+In this section, we describe the implementation of the rendering scheme in a multimodal visualization environment with DWI functionalities \cite{VMTKNeuro}. Fig. \ref{fig::ex_glyph_DWI_visualization} shows an result of the proposed rendering scheme applied to this environment.
 
 \begin{figure}[h]
     \centering
@@ -564,13 +564,19 @@ In this section, we describe the implementation of the rendering scheme in a mul
     \label{fig::ex_glyph_DWI_visualization}
 \end{figure}
 
-In this environment, a HARDI method is computed and stored through its samples in a hemisphere of a spherical mesh for all samples contained in a DWI, as well with their respectives translation coordinates to its center in the volume space. The visualization system renders the DWI volume, with the option to co-register with its respective anatomical T1 MRI. There is a functionality to detect the samples appearing on screen, returning their respective indexes of the volume. From the index of the appearing samples on screen, the translation coordinates buffer and their respective HARDI data are set up and sent to GPU as discussed in subsection \ref{ssec::datastruct}. The computation from the HARDI data to $\bm{\Psi^h}$ is illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}.
+In this environment, there is a ray casting based rendering for MRI/DWI volumes and a system for appearing samples detection, which is proposed and described by Voltoline et al. \cite{voltoline2021}. 
+
+In this environment, a HARDI method is computed and stored through its samples in a hemisphere of a spherical mesh for all samples contained in a DWI, as well with their respective translation coordinates to its center in the volume space.
+
+The visualization system renders the DWI volume, with the option to co-register with its respective anatomical T1 MRI and the glyphs are rendered at their respective samples position.
+
+To make this possible, there is a functionality to detect the appearing samples on screen, returning their respective indexes of the volume, feature proposed by Voltoline et al. \cite{voltoline2021}. The translation coordinates buffer and ODF data are created by copying the precomputed data in the fashion discussed in the subsection \ref{ssec::datastruct} and sent to GPU, as illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}.
 
 \begin{figure}[h]
     \centering
     %\rule{6cm}{3cm}
     \includegraphics[width=0.89\linewidth, angle=0]{figs/rendering_scheme/organizacao2GPU_red1.png}
-    \caption{Rendering scheme applied to a DWI visualization scheme. For each one of the $S$ DWI's samples, its respective ODF is pre-computed in $N$ samples in an hemisphere. The $P$ red-contoured ODFs are requested to be drawn, thus setting up the matrix $\bm{\Psi^{h}}$ and sent to the GPU. The ODF set can refer to a slice, for example}
+    \caption{Rendering scheme applied to a DWI visualization scheme. For each one of the $S$ DWI's samples, its respective ODF is pre-computed in $N$ samples in an hemisphere. The $M$ red-contoured ODFs are requested to be drawn, thus setting up the matrix $\bm{\Psi^{h}}$ and sent to the GPU. The ODF set can refer to a slice, for example}
     \label{fig::vmtk_precomputed2GPU}
 \end{figure}
 

@@ -127,7 +127,7 @@ e@mail
 
 %added by Ting
 \usepackage[normalem]{ulem}
-\usepackage{todonotes}
+%\usepackage{todonotes}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                Document
@@ -142,6 +142,8 @@ e@mail
 
 \begin{abstract}
 \noindent
+
+
 
 
 
@@ -488,7 +490,7 @@ Fig. \ref{fig::ex_glyph} shows glyphs for different meshes in detail. One can se
 
 Fig. \ref{fig::ex_glyph_DWI_visualization} shows an application of the proposed scheme integrated into a DWI visualization system. At that size, one can not infer about the shape of the glyphs and the color is a more dominant on the information given. In this scenario, there is a opportunity to decrease the resolution of the glyph to decrease GPU memory usage.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
     \subfloat[4-th order (162 vertices and 320 triangles per glyph). ]{\includegraphics[width=.75\linewidth, angle=0]{figs/Results/Glyphs_4.png}
@@ -508,7 +510,7 @@ Fig. \ref{fig::ex_glyph_DWI_visualization} shows an application of the proposed 
 
 
 
-%\begin{figure}[h]
+%\begin{figure}[ht]
     %\centering
     %\rule{6cm}{3cm}
     %\includegraphics[width=1.00\linewidth, angle=0]{figs/Results/Glyphs_onFAMAP_2.png}
@@ -521,7 +523,7 @@ Fig. \ref{fig::ex_glyph_DWI_visualization} shows an application of the proposed 
 In Fig. \ref{fig::benchmark_full} and \ref{fig::benchmark_half} follows the benchmark of the rendering scheme without and with the optimization for symmetrical ODFs. The data structures setup process is accelerated by using CPU parallelism. The computer used was a Macbook Pro Retina 13' early 2015, with an Intel Core i5 Dual-Core 2.7GHz CPU, 8 GB RAM and a Intel Iris 6100 GPU with 1536 MB.
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
     \subfloat[General rendering scheme for ODFs benchmark ]{\includegraphics[width=.99\linewidth, angle=0]{figs/Benchmark/benchmark_full.png}
@@ -554,11 +556,11 @@ There is a relevant performance difference in the scheme by taking advantage of 
 
 In this section, we describe the implementation of the rendering scheme in a multimodal visualization environment with DWI functionalities \cite{VMTKNeuro}. Fig. \ref{fig::ex_glyph_DWI_visualization} shows an result of the proposed rendering scheme applied to this environment.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     %\rule{6cm}{3cm}
     \includegraphics[width=1.00\linewidth, angle=0]{figs/Results/glyphs_integrated_DWI.png}
-    \caption{Glyphs integrated into a DWI's visualization scheme. The glyphs are located in a midaxial region of the brain, cutted in the left side. The spherical mesh used corresponds to an 8-th tessellated icosahedron. The DWI was acquired with 32 gradient directions and $b=1000s/mm^2$.
+    \caption{Glyphs integrated into a DWI's visualization scheme. The glyphs are located in a midaxial region of the brain, cutted in the left side. The spherical mesh used to generate the glyphs corresponds to an 8-th tessellated icosahedron. The DWI was acquired with 32 gradient directions and $b=1000s/mm^2$.
     }
     \label{fig::ex_glyph_DWI_visualization}
 \end{figure}
@@ -571,11 +573,11 @@ The visualization system renders the DWI volume, with the option to co-register 
 
 To make this possible, the tool that detects the appearing samples on screen returns their respective indexes of the volume, which serves as basis to the setup of the translation coordinates buffer and ODF data. The setup is made by copying the pre-computed data into the format discussed in the subsection \ref{ssec::datastruct} and send to GPU. This process to ODF samples is illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     %\rule{6cm}{3cm}
     \includegraphics[width=0.89\linewidth, angle=0]{figs/rendering_scheme/organizacao2GPU_red1.png}
-    \caption{Rendering scheme applied to a DWI visualization scheme. For each one of the $S$ DWI's samples, its respective ODF is pre-computed in $N$ samples in an hemisphere. The $M$ red-contoured ODFs are requested to be drawn, thus setting up the matrix $\bm{\Psi^{h}}$ and sent to the GPU. The ODF set to be rendered can refer to a slice, for example.}
+    \caption{Rendering scheme applied to a DWI visualization scheme. For each one of the $S$ DWI's samples, its respective ODF is pre-computed in $N$ samples in an hemisphere. The $M$ red-contoured ODFs are requested to be drawn, thus setting up the matrix $\bm{\Psi}^{\bm{h}}$ and send to the GPU. The ODF set to be rendered can refer to a slice, for example.}
     \label{fig::vmtk_precomputed2GPU}
 \end{figure}
 
@@ -629,7 +631,7 @@ The rendering scheme is not only DWI applicable, but to other areas that use ODF
 
 %It can be a useful tool to render each ODF's glyph on its respective area in the scene.
 
-\section{Future works}
+%\section{Future works}
 
 For future works, we will do the following investigations:
 \begin{itemize}

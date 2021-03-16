@@ -223,7 +223,7 @@ In this work, we present an interactive GPU-accelerated polygon-based rendering 
 
 This rendering scheme, integrated with visualization systems to diffusion images, can be a powerful tool for researchers in the area to assess a set of local diffusion profiles and improve their understanding of advanced methods for diffusion imaging.
 
-This paper is divided in \ref{sec::conclusions} sections. In section \ref{sec::related_work}, we discuss the related works; in the section \ref{sec::odf_glyph_rendering}, we discuss the rendering scheme, the data structures associated and an overview of the GPU shaders; in the section \ref{sec::results}, we analyze the glyphs generated and show performance measurements; and in the section \ref{sec::conclusions}, we conclude the work.
+This paper is divided in \ref{sec::conclusions} sections. In section \ref{sec::related_work}, we discuss the related works; in the section \ref{sec::odf_glyph_rendering}, we discuss the rendering scheme, the data structures associated, and an overview of the GPU shaders; in the section \ref{sec::results}, we analyze the glyphs generated and show performance measurements; and in the section \ref{sec::conclusions}, we conclude the work.
 
 %\todo{Redundant text. Instead, write the expected contribution.}\sout{The integration of this rendering scheme in a DW-MRI visualization can be  It improves the understanding of the output result of an diffusion imaging method applied to DW-MRI, as well as provide an a visual information of the underlying model where directional information of fibers is extracted to be used on brain fiber reconstruction. The real time factor can improve the visual interactivity of the research in the area.}
 
@@ -252,7 +252,7 @@ Polygons-based glyph rendering schemes are an area that has not been much explor
 
 % \sout{ and imply that they were not programming the GPU. It is worth mentioning that instance rendering was not released back then}.
 
-Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyphs as an alternative to the polygon-based previous works and achieved better performance results by comparing with the approach of Shattuck et al. \cite{shattuck2008}. In their approach, each glyph's CPU-GPU data traffic consists of coefficients of spherical harmonics for a GPU-based ray casting algorithm. His approach was further improved by Almsick et al. \cite{almsick2011}, which is documented to have the state of art FPS performance.
+Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyphs as an alternative to the polygon-based previous works and achieved better performance results by comparing with Shattuck et al. \cite{shattuck2008}. In their approach, each glyph's CPU-GPU data traffic consists of coefficients of spherical harmonics for a GPU-based ray casting algorithm. His approach was further improved by Almsick et al. \cite{almsick2011}, which is documented to have state-of-the-art FPS performance.
 
 %They also compared their approach to the polygon based rendering scheme proposed by Shattuck et al. \cite{shattuck2008}. 
 
@@ -281,7 +281,7 @@ In this section, we discuss the rendering scheme of the glyphs to be shown in th
 
 %The glyphs consist of spheres with each one of its radius points deformed by its respective ODF value.
 
-The scheme's initialization consists on the setup of a mesh of a unit sphere centered in the origin with N points set $\Pi = \{P_1, P_2, \dots, P_N\}$. The mesh is sent to the GPU with non repeated points, along with its respective index buffer, only once as an attribute to be instanced.
+The scheme's initialization consists on setting up a mesh of a unit sphere centered in the coordinates system origin with N points set $\Pi = \{P_1, P_2, \dots, P_N\}$. The mesh is sent to the GPU with non-repeated points and its respective index buffer only once as an attribute to be instanced.
 
 
 
@@ -316,7 +316,7 @@ First, let us define the vector set $\Upsilon$ as a function of $\Pi$ as shown i
 %\forall P_k \in \Pi ; O \text{ is the origin } \\
 %\text{}
 
-The amount of samples that customize a glyph are usually in the hundreds \cite{TuchQBall2004, yeh2010}, yielding a high amount of data sent to GPU in every drawing request for multiples of them. Hence, the goal of this subsection is to show a way to organize the data in the CPU, how to send it to the GPU, and how the shaders read it, so the CPU-GPU data traffic is as minimum as possible. %In this subsection, we are going to describe the general data structures of the data and in the subsection \ref{ssec::optimization}, we present an optimization of the scheme for ODFs that have symmetry.
+The number of samples that customize a glyph is usually in the hundreds \cite{TuchQBall2004, yeh2010}, yielding a high amount of data sent to GPU in every drawing request for multiples of them. Hence, this subsection aims to show a way to organize the data in the CPU, how to send it to the GPU, and how the shaders read it, so the CPU-GPU data traffic is as minimum as possible. %In this subsection, we are going to describe the general data structures of the data and in the subsection \ref{ssec::optimization}, we present an optimization of the scheme for ODFs that have symmetry.
 
 
 
@@ -327,7 +327,7 @@ The amount of samples that customize a glyph are usually in the hundreds \cite{T
 %\sout{In this rendering scheme, the set consisting of the translation matrices and the ODF profiles consists are sent from the CPU to the GPU in each drawing request. Hence, in order to achieve the goal of interactivity, it is desirable that the data traffic between both parts is as little as possible.}
 
 \subsubsection{Translation}
-Let $M$ be the number of glyphs to be drawn, corresponding to the amount of instances of the spherical mesh as well. The translation points are organized as a vector of points $[C_1,C_2, \dots, C_M]$, where $C_i= C_i(x_i, y_i, z_i)$, and sent to the GPU as an attribute. Each point of this attribute is unique for each one of the $M$ instances of the spherical mesh.
+Let $M$ be the number of glyphs to be drawn, corresponding to the number of instances of the spherical mesh. The translation points are organized as a vector of points $[C_1,C_2, \dots, C_M]$, where $C_i= C_i(x_i, y_i, z_i)$, and sent to the GPU as an attribute. Each point of this attribute is unique for each of the $M$ instances of the spherical mesh.
 
 %The i-th index of the matrices set vector refers to the spherical mesh's i-th instance to be rendered centered at the point $C_i(x_i, y_i, z_i)$.
 
@@ -353,7 +353,7 @@ The ODF data sent to GPU consists of the N samples referring to the diffusion pr
 \endgroup
 \end{equation}
 
-where $\psi_{ij}$ refers to the ODF value $\psi_i(\bm{u}_j)$ of the i-th glyph associated with the direction $\bm{u}_j$, which scales the  vertex $P_j$ of the spherical mesh. $\bm{\Psi}_{MxN}$ is sent to the GPU as a 2D texture.
+where $\psi_{ij}$ refers to the ODF value $\psi_i(\bm{u}_j)$ of the i-th glyph associated with the direction $\bm{u}_j$, which scales the vertex $P_j$ of the spherical mesh. $\bm{\Psi}_{MxN}$ is sent to the GPU as a 2D texture.
 
 On the GPU, the access of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader.
 
@@ -404,7 +404,7 @@ Hence, the GPU access is performed by a simple lookup of the texture texel\footn
 \subsubsection{Optimization on symmetrical ODFs}
 \label{sssec::optimization}
 
-In this subsection, we show an adaption of the data structure described in the subsection \ref{ssec::datastruct} to symmetrical ODFs and a strategy to decrease its related CPU-GPU data traffic by half.
+This subsection shows an adaption of the data structure described in the subsection \ref{ssec::datastruct} to symmetrical ODFs and a strategy to decrease its related CPU-GPU data traffic by half.
 
 An ODF is symmetrical if $\psi(\bm{u}) = \psi(-\bm{u})$ for all $\bm{u}$ in the unit sphere. This symmetry applies to the diffusion behavior, which makes this section entirely applicable for rendering HARDI ODFs.%This property is present on all imaging methods for diffusion.
 
@@ -454,7 +454,7 @@ Hence, we define a matrix $\bm{\Psi^h}_{Px\frac{M}{2}}$ such that $\bm{\psi^h}_{
 \endgroup
 \end{equation*}
 
-$\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm{\Psi}$ described in the subsection \ref{ssec::datastruct} and the difference lies in the lookup process. On the GPU, the vertices corresponding to the 2k-th and (2k+1)-th Vertex\_ID in the spherical mesh of the same instance have the same value to lookup\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi^h}$, ivec2(gl\_InstanceID, gl\_VertexID/2), 0)[0]}, corresponding to the k-th column, which can be accessed accordingly in the vertex shader.
+$\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm{\Psi}$ described in the subsection,\ref{ssec::datastruct} and the difference lies in the lookup process. On the GPU, the vertices corresponding to the 2k-th and (2k+1)-th Vertex\_ID in the spherical mesh of the same instance have the same value to lookup\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi^h}$, ivec2(gl\_InstanceID, gl\_VertexID/2), 0)[0]}, corresponding to the k-th column, which can be accessed accordingly in the vertex shader.
 
 %\sout{In}\textcolor{blue}{On} the GPU, the  in $\bm{\Psi}^h$, which corresponds to the K-th index of the matrix, which can be accessed accordingly in the vertex shader.
 
@@ -465,7 +465,7 @@ $\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm
 
 \subsubsection{Vertex Shader}
 \begin{enumerate}
-    \item Lookup the coefficient that customizes the glyphs and multiply by the spherical vertex;
+    \item Lookup the coefficient that customizes the glyphs and perform the scaling on the spherical vertex;
     \item perform translation of the glyph;
     \item scale and apply the model-view-projection transformation;
     \item compute color as a function of the spherical mesh vertex accordingly to Eq. \ref{eq::glyph_color} and send to the fragment shader.
@@ -486,9 +486,9 @@ $\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm
 
 \subsection{Visual aspects}
 
-Fig. \ref{fig::ex_glyph} shows glyphs for different meshes in detail. One can see that a spherical mesh defined by an $8^{th}$ (Fig. \ref{fig::ex_glyph8}) tessellation order of the icosahedron is fine enough that does not have much visual difference compared to the $16^{th}$ order (Fig. \ref{fig::ex_glyph16}).
+Fig. \ref{fig::ex_glyph} shows glyphs for different meshes in detail. One can see that a spherical mesh defined by an $8^{th}$ (Fig. \ref{fig::ex_glyph8}) tessellation order of the icosahedron is fine enough that it does not have much visual difference compared to the $16^{th}$ order (Fig. \ref{fig::ex_glyph16}).
 
-Fig. \ref{fig::ex_glyph_DWI_visualization} shows an application of the proposed scheme integrated into a DWI visualization system. At that size, one can not infer about the shape of the glyphs and the color is a more dominant on the information given. In this scenario, there is a opportunity to decrease the resolution of the glyph to decrease GPU memory usage.
+Fig. \ref{fig::ex_glyph_DWI_visualization} shows an application of the proposed scheme integrated into a DWI visualization system. At that size, one can not infer the shape of the glyphs, and the color is more dominant on the information given. In this scenario, there is an opportunity to decrease glyph resolution to decrease GPU memory usage.
 
 \begin{figure}[ht]
 \centering
@@ -520,7 +520,7 @@ Fig. \ref{fig::ex_glyph_DWI_visualization} shows an application of the proposed 
 
 \subsection{Performance}
 
-In Fig. \ref{fig::benchmark_full} and \ref{fig::benchmark_half} follows the benchmark of the rendering scheme without and with the optimization for symmetrical ODFs. The data structures setup process is accelerated by using CPU parallelism. The computer used was a Macbook Pro Retina 13' early 2015, with an Intel Core i5 Dual-Core 2.7GHz CPU, 8 GB RAM and a Intel Iris 6100 GPU with 1536 MB.
+In Fig. \ref{fig::benchmark_full} and \ref{fig::benchmark_half} follow the benchmark of the rendering scheme without and with the optimization for symmetrical ODFs. The data structures setup process is accelerated by using CPU parallelism. The computer used was a Macbook Pro Retina 13' early 2015, with an Intel Core i5 Dual-Core 2.7GHz CPU, 8 GB RAM, and an Intel Iris 6100 GPU with 1536 MB of memory.
 
 
 \begin{figure}[ht]
@@ -538,7 +538,7 @@ In Fig. \ref{fig::benchmark_full} and \ref{fig::benchmark_half} follows the benc
     \label{fig::benchmark}
 \end{figure}
 
-The results indicates that our scheme gives satisfactory results for interactive usage. Using this scheme, it is possible to render thousands of glyphs in interactive rates using a $4^{th}$ order tessellation of the icosahedron and hundreds with $16^{th}$ order, as shown in Fig. \ref{fig::benchmark_half}.
+The results indicate that our scheme gives satisfactory results for interactive usage. Using this scheme, it is possible to render thousands of glyphs in interactive rates using a $4^{th}$ order tessellation of the icosahedron and hundreds with $16^{th}$ order, as shown in Fig. \ref{fig::benchmark_half}.
 
 There is a relevant performance difference in the scheme by taking advantage of the ODF's symmetry. For example, in the 642 vertices spherical mesh, without optimization, the graphic hits 60 FPS with less than 2000 glyphs rendered, while taking advantage of the symmetry of ODFs makes it possible to render 4000, obtaining similar performance.
 
@@ -554,30 +554,30 @@ There is a relevant performance difference in the scheme by taking advantage of 
 
 \subsection{Application}
 
-In this section, we describe the implementation of the rendering scheme in a multimodal visualization environment with DWI functionalities \cite{VMTKNeuro}. Fig. \ref{fig::ex_glyph_DWI_visualization} shows an result of the proposed rendering scheme applied to this environment.
+In this section, we describe the implementation of the rendering scheme in a multimodal visualization environment with DWI functionalities \cite{VMTKNeuro}. Fig. \ref{fig::ex_glyph_DWI_visualization} show the result of the proposed rendering scheme applied to this environment.
 
 \begin{figure}[ht]
     \centering
     %\rule{6cm}{3cm}
     \includegraphics[width=1.00\linewidth, angle=0]{figs/Results/glyphs_integrated_DWI.png}
-    \caption{Glyphs integrated into a DWI's visualization scheme. The glyphs are located in a midaxial region of the brain, cutted in the left side. The spherical mesh used to generate the glyphs corresponds to an 8-th tessellated icosahedron. The DWI was acquired with 32 gradient directions and $b=1000s/mm^2$.
+    \caption{Glyphs integrated into a DWI's visualization scheme. The glyphs are located in a mid axial region of the brain, cut in the left side. The spherical mesh used to generate the glyphs corresponds to an 8-th tessellated icosahedron. The DWI was acquired with 32 gradient directions and $b=1000s/mm^2$.
     }
     \label{fig::ex_glyph_DWI_visualization}
 \end{figure}
 
-In this environment, there is a ray casting based rendering for MRI/DWI volumes and a system for appearing samples detection, which is proposed and described by Voltoline et al. \cite{voltoline2021}. 
+In this environment, there is a ray casting-based rendering for MRI/DWI volumes and a system for appearing samples detection proposed and described by Voltoline et al. \cite{voltoline2021}. 
 
-In this environment, a HARDI method is computed and stored through its samples in a hemisphere of a spherical mesh for all samples contained in a DWI, as well with their respective translation coordinates to its center in the volume space.
+In this environment, a HARDI method is computed and stored through its samples in a hemisphere of a spherical mesh for all samples contained in a DWI, as well as their respective translation coordinates to its center in the volume space.
 
-The visualization system renders the DWI volume, with the option to co-register with its respective anatomical T1 MRI and the glyphs are rendered at their respective samples position.
+The visualization system renders the DWI volume, with the option to co-register with its respective anatomical T1 MRI, and the glyphs are rendered at their respective samples position.
 
-To make this possible, the tool that detects the appearing samples on screen returns their respective indexes of the volume, which serves as basis to the setup of the translation coordinates buffer and ODF data. The setup is made by copying the pre-computed data into the format discussed in the subsection \ref{ssec::datastruct} and send to GPU. This process to ODF samples is illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}.
+To make this possible, the tool that detects the appearing samples on-screen returns their respective indexes of the volume, which serves as the basis for the setup of the translation coordinates buffer and ODF data. The setup is made by copying the pre-computed data into the format discussed in the subsection \ref{ssec::datastruct} and send to GPU. This process to ODF samples is illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}.
 
 \begin{figure}[ht]
     \centering
     %\rule{6cm}{3cm}
     \includegraphics[width=0.89\linewidth, angle=0]{figs/rendering_scheme/organizacao2GPU_red1.png}
-    \caption{Rendering scheme applied to a DWI visualization scheme. For each one of the $S$ DWI's samples, its respective ODF is pre-computed in $N$ samples in an hemisphere. The $M$ red-contoured ODFs are requested to be drawn, thus setting up the matrix $\bm{\Psi}^{\bm{h}}$ and send to the GPU. The ODF set to be rendered can refer to a slice, for example.}
+    \caption{Rendering scheme applied to a DWI visualization scheme. For each one of the $S$ DWI's samples, its respective ODF is pre-computed in $N$ samples in an hemisphere. The $M$ red-contoured data consists of ODFs that are requested to be drawn. They setup $\bm{\Psi}^{\bm{h}}$ and are sent to the GPU. The ODF set to be rendered can refer to a slice, for example.}
     \label{fig::vmtk_precomputed2GPU}
 \end{figure}
 
@@ -586,9 +586,9 @@ To make this possible, the tool that detects the appearing samples on screen ret
 
 \subsection{Discussion}
 
-One can make a comparison in an scheme where the per-glyph data traffic consists of vertices of triangles. Let us consider a $N$-sized spherical mesh, where each point is a vertex of 6 triangles, which is characteristic of a tessellated icosahedron. The data traffic of our approach per glyph consists consists of N/2 numbers plus one copy of translate coordinates, and the customization of the glyphs are done per vertex in parallel in the GPU. The information on how to set the triangles are provided in the initialization process.
+One can make a comparison in a scheme where the per-glyph data traffic consists of vertices of triangles. Let us consider a $N$-sized spherical mesh, where each point is a vertex of 6 triangles, which is characteristic of a tessellated icosahedron. The data traffic of our approach per glyph consists of N/2 numbers plus one copy of translate coordinates, and the customization of the glyphs is done per vertex in parallel in the GPU. The information on how to set the triangles is provided in the initialization process.
 
-The polygon based approach proposed by Shattuck et al. \cite{shattuck2008} does not bring the discussion on the data structures sent to GPU in each drawing request and mention that they did not use GPU programming, furthermore, instance rendering was not available when the work was proposed. Certainly the glyph customization is done in CPU and the data traffic CPU-GPU consisted of a set of vertices extracted from the used spherical mesh with some redundancy, so the graphics API can form triangles. It means that the amount of vertices data traffic is higher than $N$, corresponding to more than $3N$ numbers for each glyph. Hence, the data traffic of our approach is less than 1/6 for the same spherical mesh.
+The polygon-based approach proposed by Shattuck et al. \cite{shattuck2008} does not discuss the data structures sent to GPU in each drawing request and mentions that they did not use GPU programming; furthermore, instance rendering was not available when the work was proposed. Certainly, the glyph customization is done in CPU, and the data traffic CPU-GPU consisted of a set of vertices extracted from the used spherical mesh with some redundancy so that the graphics API can form triangles. It means that the amount of vertices data traffic is higher than $N$, corresponding to more than $3N$ numbers for each glyph. Hence, the data traffic of our approach is less than 1/6 for the same spherical mesh.
 
 %In our approach, that amount of data traffic goes to N/2 floats. Other polygon-based approaches, such as using sending vertices of the glyphs associated to an index buffer, makes the data traffic go to 3N floats plus the size of index buffer and, additionally, regarding translation coordinates, one can choose to send this data as an attribute per vertex and increase the data traffic by 3N floats and do on GPU's threads, or the operation can be done on CPU, which is less efficient than sending once per geometry.
 
@@ -623,7 +623,7 @@ We also suggested an optimization procedure to decrease the data computation and
 
 The rendering scheme proved to be fast enough to render hundreds and thousands of objects using meshes that are fine sufficiently to make the surfaces appear smooth, depending on the spherical mesh used.
 
-This scheme can be integrated with other DW-MRI and MRI visualization schemes and we exemplified the application of it as the integration in our visualization tool for DWI.
+This scheme can be integrated with other DW-MRI and MRI visualization schemes, and we exemplified the application of it as the integration in our visualization tool for DWI.
 
 To our knowledge, this scheme, alongside the ray casting approaches \cite{peeters2009,almsick2011}, are the ones that give the possibility for fast and interactive HARDI data exploration.
 
@@ -635,7 +635,7 @@ The rendering scheme is not only DWI applicable, but to other areas that use ODF
 
 For future works, we will do the following investigations:
 \begin{itemize}
-\item provide in depth a performance comparison between the ray casting approach with the approach suggested in this work;
+\item provide in-depth a performance comparison between the ray casting approach with the approach suggested in this work;
 \item adapt the scheme by changing the data that customize the glyphs from ODF samples to spherical harmonics basis coefficients and compute its samples in GPU;
 \item investigate strategies to change the spherical mesh as a function of the amount and size of glyphs to be rendered in a drawing request, giving the possibility of decreasing its number of vertices in situations where glyphs are small and/or in high number in the scene.
 \end{itemize}

@@ -56,7 +56,7 @@
 \usepackage{bm} 
 \usepackage{amsmath,amsfonts,amssymb}
 
-
+\usepackage{todonotes}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                Title
@@ -66,7 +66,7 @@
 \author{
 \parbox{0.25\textwidth}{\centering
 Daniel Silva\\[1mm]
-University of Campinas,\\
+DCA/FEEC/University of Campinas,\\
 %1st line of address\\
 %2nd line of address\\
 Brazil\\[1mm]
@@ -108,9 +108,9 @@ e@mail
 \g@addto@macro\UrlSpecials{\do : {\Ucolon}}
 \makeatother
 
-
-
-
+%added by Ting
+\usepackage[normalem]{ulem}
+\usepackage{todonotes}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                              My Commands
@@ -125,10 +125,6 @@ e@mail
 %\newtheorem{lem}{Lemma}
 %\newtheorem{defn}{Definition}
 
-%added by Ting
-\usepackage[normalem]{ulem}
-%\usepackage{todonotes}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                Document
 
@@ -142,6 +138,8 @@ e@mail
 
 \begin{abstract}
 \noindent
+
+Diffusion magnetic resonance imaging provides the quantification of the diffusion process of water molecules. Applied to the brain, it is unique on providing white matter fiber configuration in-vivo. In order to synthesize in detail the diffusion displacement, high angular resolution imaging (HARDI) methods are used and these techniques are represented by orientation distribution functions (ODF), which consist of an association between directions to a probability of occurrence set. In this work we present an interactive polygon-based rendering scheme for ODFs. In our approach, the ODFs are represented by samples in a spherical domain and we achieve interactive rates to render multiple glyphs of them by minimizing the CPU-GPU data traffic and using the instance rendering technique. The interactivity of the scheme may help researchers in the area to improve their understanding on local diffusion displacement profiles.
 
 
 
@@ -167,19 +165,17 @@ medical visualization, HARDI, computer graphics, visualization.
 
 Diffusion-weighted magnetic resonance imaging (DW-MRI) is a technique that aims to measure the random Brownian motion of water molecules. Applied to the brain, it is unique in providing in-vivo information on the white matter path. Imaging methods to synthesize the diffusion signals into functions have been a research subject for more than two decades.
 
-The first and the most applied method in the clinical area is diffusion tensor imaging (DTI) \cite{Basser1994}. The technique aims to fit a set of diffusion signal samples into a Gaussian 3D model.%, of average zero, and the diffusion tensor is the covariance matrix.
-
-The limitations of DTI are well known \cite{descoteaux2015,SCHILLING2019194}. The Gaussian assumption fits well the diffusion behavior in points that have only one underlying fiber. However, it fails to model regions with multiple fibers and more complex behavior (i.e., fiber crossing, branching, kissing, merging). This limitation critically affects the accuracy of the extraction of the underlying fiber distribution.
+The first and the most applied method in the clinical area is diffusion tensor imaging (DTI) \cite{Basser1994}. The technique aims to fit a set of diffusion signal samples into a Gaussian 3D model.
+%%, of average zero, and the diffusion tensor is the covariance matrix.
+\sout{The limitations of DTI are well known \cite{descoteaux2015,SCHILLING2019194}. The Gaussian assumption fits} \textcolor{blue}{This fitting works}  well \textcolor{blue}{for} the diffusion behavior in points that have only one underlying fiber. However, it fails to model regions with multiple fibers and more complex behavior (i.e., fiber crossing, branching, kissing, merging\textcolor{blue}{, and fanning}). This limitation critically affects the \sout{accuracy of the extraction of the underlying fiber distribution}\textcolor{blue}{reconstruction accuracy of the underlying fiber \cite{descoteaux2015,SCHILLING2019194}}.
 
 %The limitations of DTI are well known \cite{descoteaux2015,SCHILLING2019194}. The \sout{gaussian assumption}\textcolor{blue}{Gaussian distribution} fits well the diffusion behavior when the point represents a \textcolor{blue}{brain} region \sout{of the brain} that \textcolor{blue}{only} one fiber passes through it\sout{, but}\textcolor{blue}{But,} the model is limited when \sout{it comes to describe}\textcolor{blue}{describing} the diffusion in areas \sout{that have}\textcolor{blue}{with} fibers \sout{with a}\textcolor{blue}{of} more complex behavior (\sout{ie.}\textcolor{blue}{i.e.,} fiber crossing, branching, kissing). This limitation \sout{affects} critically \textcolor{blue}{affects} the accuracy \sout{on}\textcolor{blue}{of} inferring the fiber distribution in the brain.
 
-More advanced imaging methods for diffusion and high angular resolution diffusion imaging (HARDI) acquisitions were introduced to overcome the Gaussian model's limitation \cite{descoteaux2015}. %These methods require more samples on the DWI acquisitions than those applied on DTI. %These acquisitions are called High Angular Resolution Diffusion Imaging (HARDI). While the amount of diffusion-weighted acquisitions used on DTI vary between 6 and 32, HARDI acquisitions have more than 45 .
-
+\sout{More advanced imaging methods for diffusion and} High angular resolution diffusion imaging (HARDI) acquisitions \textcolor{blue}{and more advances methods for processing diffusion data, such as Q-ball imaging \cite{???} and diffusion orientation transform \cite{???},} were introduced to overcome the Gaussian model's limitation \cite{descoteaux2015}. %These methods require more samples on the DWI acquisitions than those applied on DTI. %These acquisitions are called High Angular Resolution Diffusion Imaging (HARDI). While the amount of diffusion-weighted acquisitions used on DTI vary between 6 and 32, HARDI acquisitions have more than 45 .
 %\sout{To overcome the limitation of the gaussian model assumption, m}\textcolor{blue}{M}ore advanced imaging methods for diffusion were introduced \textcolor{blue}{to overcome the limitation of the Gaussian model}. These methods require more samples on the DWI \textcolor{blue}{acquisitions} than \textcolor{blue}{those applied } \sout{the acquisitions used} on DTI\sout{ and t}\textcolor{blue}{. T}hese acquisitions \sout{were labeled as}\textcolor{blue}{are called} High Angular Resolution Diffusion Imaging (HARDI). While the amount of diffusion-weighted acquisitions used on DTI vary between 6 and \todo{For very special cases ...}32, HARDI acquisitions have \todo{In competitions less number of acquisitions were applied ...}more than 45 \cite{descoteaux2015}.
+\sout{The most common method to visualize HARDI data through the\sout{se} advanced imaging methods is \sout{by} spherical polar plot\textcolor{blue}{s or HARDI} glyphs. These methods} \textcolor{blue}{HARDI data} are \sout{represented by}\textcolor{blue}{typically preprocessed into a model-free} orientation distribution function (ODF) \textcolor{blue}{$\psi(\bm{u})$}, which consist\sout{s} \sout{of}\textcolor{blue}{in} an association of a set of \sout{directions, represented by} unit \textcolor{blue}{directional} vectors\sout{,} to \sout{scalars representing the corresponding} diffusivity \textcolor{blue}{scalars. \todo{Use consistently one name.}The most common method to visualize ODFs is spherical polar plots, also known as HARDI glyphs and ODF glyphs}\sout{for each element in the domain}. 
 
-The most common method to visualize HARDI data through these advanced imaging methods is by spherical polar plot glyphs. These methods are represented by orientation distribution functions (ODF), which consists of an association of a set of directions, represented by unit vectors, to scalars that represent the diffusivity for each element in the domain.
-
-The spherical polar plot consists of the modulation of a sphere surface, where its radius points are scaled to its ODF values. To emphasize the orientational structure, it is useful to generate the glyphs using a min-max normalized version of the ODF \cite{TuchQBall2004}, as illustrated in Fig. \ref{fig::intro_glyph}. Eq. \ref{eq::normglifo} presents the spherical polar plot of the min-max normalized ODF $\psi(\bm{u})$.
+The spherical polar plot consists \sout{of}\textcolor{blue}{in} modulating a sphere surface, \sout{where its radius points are scaled to its ODF values}\textcolor{blue}{whose points are  associated with the oriented diffusion vectors represented by  $\psi(\bm{u})$.} \sout{To emphasize the orientational structure,} It is useful to generate the glyphs using \sout{a}\textcolor{blue}{the} min-max normalized versio of the ODF \cite{TuchQBall2004} \textcolor{blue}{to emphasize the dominant diffusion directions}. \sout{, as illustrated in Fig. \ref{fig::intro_glyph}.} Eq. \ref{eq::normglifo} presents the \sout{spherical polar plot of the min-max normalized ODF $\psi(\bm{u})$.} \textcolor{blue}{magnitude of each vector $\bm{u}$ after the min-max normalization of $\psi(\bm{u})$ at the point $\bm{u}$ on the sphere.} 
 
 \begin{figure}[htb]
     \centering
@@ -200,30 +196,42 @@ The spherical polar plot consists of the modulation of a sphere surface, where i
     R(\bm{u}) = \frac{\psi(\bm{u}) - min(\psi(\bm{u}))}{max(\psi(\bm{u})) - min(\psi(\bm{u}))}
 \end{equation}
 
-%where $R(\bm{u})$ is the length of a deformed sphere in the direction $\bm{u}$.
-
-These glyphs provide a clear visualization of local diffusion through its ODF samples. Researchers use them to validate imaging methods \cite{descoteaux2007_QBI,  TuchQBall2004,tournier2007,Tournier2004DirectEO, tuch2002,  yeh2010} and assess the local relationship between the acquisition quality, the imaging method, and the underlying fiber orientation distribution (FOD) computed \cite{cho2008, daducci2014,descoteaux2007,  vega2009}. %The FODs extracted from an imaging method applied to a DWI acquisition are used as input of fiber tracking algorithms. %The conjecture of the possibility of brain connectivity from the DWI acquisitions motivates this research area's main motivation.
-
-%\todo{Insert a figure to help in understanding.}These glyphs\textcolor{blue}{, as illustrated in Fig~\ref{???},} \sout{give}\textcolor{blue}{provide} a clear visualization of local \sout{information in} diffusion \sout{imaging methods} \textcolor{blue}{in each voxel}. \sout{It is used by} \todo{References?}Researchers use them to \todo{???}\textcolor{red}{assess the acquisition quality,} \sout{attest the validity of}\textcolor{blue}{validate} an imaging method, \sout{the adequability of it given an acquisition} and \sout{the} check the relationship between the \textcolor{blue}{applied} imaging method \sout{used with} \textcolor{blue}{and the} fiber reconstruction algorithms called tractography.
-
-Color can enhance the orientation information, making its spatial direction explicit. A simple color mapping is applied to highlight a diffusion vector $\bm{u}$ in three orthogonal directions, as defined in Eq. \ref{eq::glyph_color}.
+\textcolor{blue}{Fig. \ref{fig::intro_glyph} ilustrates comparatively an ODF glyph and a min-max normalized ODF glyph. Note the use of color to enhance the orientation. A simple color mapping, commonly used by the DWI community, is applied to the normalized  $R(\bm{u})$, $(u_x, u_y, u_z)$, to get the rgb coordinates, as defined in Eq. \ref{eq::glyph_color}.}
 
 \begin{equation}
 \label{eq::glyph_color}
-    (r,g,b) = (|u_x|,|u_y|,|u_z|)
+    r = |u_x| ~~~~ g = |u_y| ~~~~ b = |u_z|, 
 \end{equation}
+\textcolor{blue}{where, concerning anatomical planes, the red color ($r$) represents the mediolateral direction, the green ($g$) refers to the anteroposterior direction, and the blue ($b$), inferior-superior direction.}
 
-In the brain anatomical axes, the red color represents the mediolateral direction, the green refers to the anteroposterior direction, and the blue, inferior-superior direction. The DWI community commonly uses this color scheme.
+%where $R(\bm{u})$ is the length of a deformed sphere in the direction $\bm{u}$.
+
+These glyphs provide a \sout{clear}\textcolor{blue}{better} visualization of local diffusion \sout{through its ODF samples}\textcolor{blue}{in each sample}. Researchers use them to validate imaging methods \cite{descoteaux2007_QBI,  TuchQBall2004,tournier2007,Tournier2004DirectEO, tuch2002,  yeh2010} and assess \todo{What do you mean?}\textcolor{red}{the local relationship between the acquisition quality}, the imaging method, and the \textcolor{blue}{estimated} underlying fiber orientation distribution (FOD) \sout{computed} \cite{cho2008, daducci2014,descoteaux2007,  vega2009}. %The FODs extracted from an imaging method applied to a DWI acquisition are used as input of fiber tracking algorithms. %The conjecture of the possibility of brain connectivity from the DWI acquisitions motivates this research area's main motivation.
+\textcolor{blue}{It is highly desirable to visualize and explore HARDI data in an interactive way. It would improve the brain connection research quality and help to move advanced diffusion imaging into clinical practice \cite{peeters2009}. However, the high dimensionality of ODF has been an obstacle, especially when one wants to take advantage of GPU's capacity and performance.} 
+
+\textcolor{blue}{Peeters et al.~\cite{peeters2009} advocated that ray-casting approach is more appropriate to deal with CPU-GPU data transfer bottleneck. The amount of data to be transferred from CPU to GPU could be greatly reduced by only passing the position and coefficients of each spherical polar plot's geometric representation. Besides, the rendering quality is not dependent on the mesh resolution as triangle-based one. However, Voltoline and Wu showed that the advanced GPU features, namely instanced rendering, transform feedback, tesselation shader, and indirect rendering, could make the triangle-based rendering competitive with the ray-casting one, with the advantage of avoiding the root-finding problem and exploring the outperformance of the triangle hardware graphics accelerator.} 
+%\todo{Insert a figure to help in understanding.}These glyphs\textcolor{blue}{, as illustrated in Fig~\ref{???},} \sout{give}\textcolor{blue}{provide} a clear visualization of local \sout{information in} diffusion \sout{imaging methods} \textcolor{blue}{in each voxel}. \sout{It is used by} \todo{References?}Researchers use them to \todo{???}\textcolor{red}{assess the acquisition quality,} \sout{attest the validity of}\textcolor{blue}{validate} an imaging method, \sout{the adequability of it given an acquisition} and \sout{the} check the relationship between the \textcolor{blue}{applied} imaging method \sout{used with} \textcolor{blue}{and the} fiber reconstruction algorithms called tractography.
+
+\sout{Color can enhance the orientation information, making its spatial direction explicit. A simple color mapping is applied to highlight a diffusion vector $\bm{u}$ in three orthogonal directions, as defined in Eq. \ref{eq::glyph_color}.}
+
+%\begin{equation}
+%\label{eq::glyph_color}
+%    (r,g,b) = (|u_x|,|u_y|,|u_z|)
+%\end{equation}
+
+\sout{In the brain anatomical axes, the red color represents the mediolateral direction, the green refers to the anteroposterior direction, and the blue, inferior-superior direction. The DWI community commonly uses this color scheme.}
 
 %\todo[inline]{I suggest writing motivation to this work: the challenging remaining problems and the one you are supposed to solve.}
 
-In this work, we present an interactive GPU-accelerated polygon-based rendering scheme of multiple spherical polar plots from ODF samples. We applied instance rendering to reduce the CPU-GPU data traffic.%\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
+In this work, we present an interactive GPU-accelerated \sout{polygon}\textcolor{blue}{triangle}-based rendering scheme of multiple spherical polar plots\sout{from ODF samples}. We applied \sout{instance rendering to reduce the CPU-GPU data traffic}\textcolor{blue}{the principle of GPU-based superquadric glyphs rendering proposed by Voltoline and Wu~\cite{voltoline2021} to the spherical polar plot's rendering}.
+
+%\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
 
 %In this work, we present a\textcolor{blue}{n interactive GPU-accelerated} rendering scheme \sout{that aims to, given samples of ODFs associated with a spherical mesh, we} \textcolor{blue}{to} render a set of spherical polar plot\textcolor{blue}{s from ODF samples}. \textcolor{blue}{Inspired by Voltoline and Wu's work, we applied instance rendering and transform feedback to reduce the CPU-GPU data traffic.}\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
 
-This rendering scheme, integrated with visualization systems to diffusion images, can be a powerful tool for researchers in the area to assess a set of local diffusion profiles and improve their understanding of advanced methods for diffusion imaging.
+\todo{is rendering necessary for visualization?}\sout{This rendering scheme, integrated with visualization systems to diffusion images, can be a powerful tool for researchers in the area to assess a set of local diffusion profiles and improve their understanding of advanced methods for diffusion imaging.}
 
-This paper is divided in \ref{sec::conclusions} sections. In section \ref{sec::related_work}, we discuss the related works; in the section \ref{sec::odf_glyph_rendering}, we discuss the rendering scheme, the data structures associated, and an overview of the GPU shaders; in the section \ref{sec::results}, we analyze the glyphs generated and show performance measurements; and in the section \ref{sec::conclusions}, we conclude the work.
+This paper is \sout{divided in}\textcolor{blue}{organized into} \ref{sec::conclusions} sections. In Section \ref{sec::related_work}, we discuss the related works; \textcolor{blue}{in Section \ref{sec:superquadric_rendering}, we present the rendering pipeline proposed by Voltoline and Wu briefly;} in Section \ref{sec::odf_glyph_rendering}, we discuss the \textcolor{blue}{modifications introduced to make the pipeline appropriate for ODF glyph rendering.} \sout{proposed rendering scheme, the data structures associated, and an overview of the GPU shaders}; in \sout{the} Section \ref{sec::results}, we analyze the glyphs generated and show performance measurements; and in \sout{the} Section \ref{sec::conclusions}, we conclude the work.
 
 %\todo{Redundant text. Instead, write the expected contribution.}\sout{The integration of this rendering scheme in a DW-MRI visualization can be  It improves the understanding of the output result of an diffusion imaging method applied to DW-MRI, as well as provide an a visual information of the underlying model where directional information of fibers is extracted to be used on brain fiber reconstruction. The real time factor can improve the visual interactivity of the research in the area.}
 
@@ -233,34 +241,34 @@ This paper is divided in \ref{sec::conclusions} sections. In section \ref{sec::r
 
 %\section{Background}
 
-
-
 \section{Related work}
 \label{sec::related_work}
 
 %\todo[inline]{You must show why the works are related to your work. Which aspects did you take advantage of in your work?}
 
-
-
 %Polygons based glyph rendering schemes is an area that has not been much explored by the HARDI community. Shattuck et al. \sout{\cite{shattuck2008} showed results of a polygon based approach} \textcolor{blue}{presented} in \sout{his}\textcolor{blue}{their} work \textcolor{blue}{\cite{shattuck2008} the rendering of ODFs as spherical meshes of 225 vertices and 2 million triangles in 10 FPS.}\sout{ and, at that time, the result reported by them was 10 FPS when using a spherical mesh of 225 vertices, with 2 million triangles being rendered.} The authors \sout{do}\textcolor{blue}{did} not \sout{explain} detail\sout{ed} their rendering scheme\sout{ and imply that they were not programming the GPU. It is worth mentioning that instance rendering was not released back then}.
 
+\textcolor{blue}{ Despite the recognized relevance of interactive rendering of HARDI data, the community has not much explored this subject. Interested in performance, we will limit ourselves here to works that exploit the GPU resources. Two major approaches are found in the literature to render the glyphs. One is based on ray-casting with the glyphs' geometry represented by a function or an algebraic expression \cite{???}. In contrast, the other is based on mesh rendering with the glyphs' geometry approximated in polygonal meshes \cite{???}.} 
 
+\sout{Polygons-based glyph rendering schemes are an area that has not been much explored by the HARDI community.} Shattuck et al. \cite{shattuck2008} \textcolor{blue}{tessellated a polar representation of an ODF with triangles by subdividing its polar domain. Whenever the modeling and viewing parameters were changed, the glyphs' vertices were recomputed and resent to the GPU.} \sout{presented the rendering of these glyphs and reports a limitation in the rendering performance.} The performance \sout{result} reported \sout{by them were}\textcolor{blue}{was} 10 \sout{FPS}\textcolor{blue}{fps} for \textcolor{blue}{a brain slice with} \sout{a} spherical mesh\textcolor{blue}{es} of 225 vertices \textcolor{blue}{corresponding to approximately 2 million triangles} \todo{How many glyphs?}\sout{and 2 million triangles being rendered. The authors did not detail their rendering scheme and did not take advantage of the GPU programming to improve it, as we show in this work}. \textcolor{blue}{We exploit, in this work, the modern GPU features to improve rendering performance, GPU-memory usage, and screen occupancy.}
 
-Polygons-based glyph rendering schemes are an area that has not been much explored by the HARDI community. Shattuck et al. \cite{shattuck2008} presented the rendering of these glyphs and reports a limitation in the rendering performance. The performance result reported by them were 10 FPS for a spherical mesh of 225 vertices and 2 million triangles being rendered. The authors did not detail their rendering scheme and did not take advantage of the GPU programming to improve it, as we show in this work.
 %ALGO RELEVANTE: ESSE TRABALHO DO SHATTUCK É O ÚLTIMO DA ÁREA QUE TEM ALGUMA COISA A VER COM O MEU, QUE É RENDERIZAR GLIFOS HARDI EM TEMPO REAL VIA POLIGONOS.
-
 
 % \sout{ and imply that they were not programming the GPU. It is worth mentioning that instance rendering was not released back then}.
 
-Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyphs as an alternative to the polygon-based previous works and achieved better performance results by comparing with Shattuck et al. \cite{shattuck2008}. In their approach, each glyph's CPU-GPU data traffic consists of coefficients of spherical harmonics for a GPU-based ray casting algorithm. His approach was further improved by Almsick et al. \cite{almsick2011}, which is documented to have state-of-the-art FPS performance.
+Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyphs\sout{ as an alternative to the polygon-based previous works and}. \textcolor{blue}{On the CPU, the center, the radius of the bounding sphere, and the bounding cube per spherical polar plot were computed. On the GPU, the raycasting algorithm was executed per pixel in the fragment shader. If the ray shot from a pixel through the view volume did not intersect the bounding sphere, the fragment was discarded. Otherwise, they performed a linear search, with discrete steps, for the intersection with ODF along the shot ray. They} achieved better performance \sout{results by comparing with} \textcolor{blue}{than the algorithm presented by} Shattuck et al. \cite{shattuck2008}. \todo{Is it the only reason for better performance?}\sout{In their approach, each glyph's CPU-GPU data traffic consists of coefficients of spherical harmonics for a GPU-based ray casting algorithm.} \textcolor{blue}{The critical issue was the accuracy and efficiency of intersection finding with an ODF along the shot ray. When the ray was almost parallel to the glyph, a larger number of iterations might incur in some threads.} \sout{The approach was \sout{where?}further improved by} Almsick et al. \cite{almsick2011} \textcolor{blue}{improved the intersection search using the \textit{regula falsi} numerical method and bounding cylinders aligned with the viewing axis. They achieved higher time performance without sacrificing the rendered glyph quality. 9,000 glyphs of 252 vertices could be generated at 30 fps}. \todo{what do you mean? what is the state-of-the-art performance?}\sout{, which is documented to have state-of-the-art FPS performance}.  \textcolor{blue}{The triangle-based rendering we applied in this work does not suffer from the root-finding problem.} 
 
 %They also compared their approach to the polygon based rendering scheme proposed by Shattuck et al. \cite{shattuck2008}. 
 
-Voltoline et al. \cite{voltoline2021} proposed a real-time polygon-based rendering scheme for a glyph representation of diffusion tensor called superquadrics \cite{Kindlmann2004}. In their work, they minimize the CPU-GPU data traffic to a few parameters that customize the glyphs in each drawing request using the instance rendering technique, obtaining state-of-art performance results. These results influenced us to adapt their scheme into our proposed HARDI glyph rendering scheme.
+%adapted the seven-pass multimodal rendering algorithm proposed by Voltoline and Wu \cite{voltoline2021} to render spherical polar plots of high dimensionality.
 
-%\todo[inline]{It is important to cite Voltoline's work.}
+Voltoline \sout{et al.} \textcolor{blue}{and Wu} \cite{voltoline2021} proposed a real-time \sout{polygon}\textcolor{blue}{triangle}-based rendering scheme for \sout{a glyph representation of diffusion tensor called} superquadric \textcolor{blue}{tensor glyphs with much fewer parameters than ODF glyphs} \cite{Kindlmann2004}. \todo{Many aspects were exploited to have performance gain!}\sout{In their work, they minimize the CPU-GPU data traffic to a few parameters that customize the glyphs in each drawing request using the instance rendering technique, obtaining state-of-art performance results.} \textcolor{blue}{They exploit several modern GPU features to improve rendering performance, GPU-memory usage, and screen occupancy. Section \ref{sec:superquadric_rendering} gives a brief overview of their proposal.} \sout{These results influenced us to adapt their scheme into our proposed HARDI glyph rendering scheme}\textcolor{blue}{}.
 
 %\section{Rendering scheme}
+\section{Seven-pass Glyph Rendering}
+\label{sec:superquadric_rendering}
+
+
 \section{ODF Glyph Rendering}
 \label{sec::odf_glyph_rendering}
 
@@ -454,7 +462,7 @@ Hence, we define a matrix $\bm{\Psi^h}_{Px\frac{M}{2}}$ such that $\bm{\psi^h}_{
 \endgroup
 \end{equation*}
 
-$\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm{\Psi}$ described in the subsection,\ref{ssec::datastruct} and the difference lies in the lookup process. On the GPU, the vertices corresponding to the 2k-th and (2k+1)-th Vertex\_ID in the spherical mesh of the same instance have the same value to lookup\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi^h}$, ivec2(gl\_InstanceID, gl\_VertexID/2), 0)[0]}, corresponding to the k-th column, which can be accessed accordingly in the vertex shader.
+$\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm{\Psi}$ described in the subsection \ref{ssec::datastruct} and the difference lies in the lookup process. On the GPU, the vertices corresponding to the 2k-th and (2k+1)-th Vertex\_ID in the spherical mesh of the same instance have the same value to lookup\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi^h}$, ivec2(gl\_InstanceID, gl\_VertexID/2), 0)[0]}, corresponding to the k-th column, which can be accessed accordingly in the vertex shader.
 
 %\sout{In}\textcolor{blue}{On} the GPU, the  in $\bm{\Psi}^h$, which corresponds to the K-th index of the matrix, which can be accessed accordingly in the vertex shader.
 
@@ -571,7 +579,7 @@ In this environment, a HARDI method is computed and stored through its samples i
 
 The visualization system renders the DWI volume, with the option to co-register with its respective anatomical T1 MRI, and the glyphs are rendered at their respective samples position.
 
-To make this possible, the tool that detects the appearing samples on-screen returns their respective indexes of the volume, which serves as the basis for the setup of the translation coordinates buffer and ODF data. The setup is made by copying the pre-computed data into the format discussed in the subsection \ref{ssec::datastruct} and send to GPU. This process to ODF samples is illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}.
+To make this possible, the tool that detects the appearing samples on-screen returns their respective indexes of the volume, which serves as the basis for the setup of the translation coordinates buffer and ODF data. The setup is made by copying the pre-computed data into the format discussed in the subsection \ref{ssec::datastruct} and sent to GPU. This process to ODF samples is illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}.
 
 \begin{figure}[ht]
     \centering
@@ -586,7 +594,7 @@ To make this possible, the tool that detects the appearing samples on-screen ret
 
 \subsection{Discussion}
 
-One can make a comparison in a scheme where the per-glyph data traffic consists of vertices of triangles. Let us consider a $N$-sized spherical mesh, where each point is a vertex of 6 triangles, which is characteristic of a tessellated icosahedron. The data traffic of our approach per glyph consists of N/2 numbers plus one copy of translate coordinates, and the customization of the glyphs is done per vertex in parallel in the GPU. The information on how to set the triangles is provided in the initialization process.
+One can make a comparison in a scheme where the per-glyph data traffic consists of vertices of triangles. Let us consider a $N$-sized spherical mesh, where each point is a vertex of 6 triangles, which is characteristic of a tessellated icosahedron. The data traffic of our approach per glyph consists of N/2 numbers plus one copy of translate coordinates, and the customization of the glyphs is done per vertex in parallel in the GPU. The information on how to set the triangles is provided once in the initialization process.
 
 The polygon-based approach proposed by Shattuck et al. \cite{shattuck2008} does not discuss the data structures sent to GPU in each drawing request and mentions that they did not use GPU programming; furthermore, instance rendering was not available when the work was proposed. Certainly, the glyph customization is done in CPU, and the data traffic CPU-GPU consisted of a set of vertices extracted from the used spherical mesh with some redundancy so that the graphics API can form triangles. It means that the amount of vertices data traffic is higher than $N$, corresponding to more than $3N$ numbers for each glyph. Hence, the data traffic of our approach is less than 1/6 for the same spherical mesh.
 

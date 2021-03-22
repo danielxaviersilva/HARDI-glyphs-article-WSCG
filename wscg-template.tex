@@ -61,6 +61,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                Title
 
+
 \title{Fast triangle-based glyph rendering scheme for high angular resolution diffusion imaging}
 
 \author{
@@ -139,11 +140,7 @@ e@mail
 \begin{abstract}
 \noindent
 
-Diffusion magnetic resonance imaging provides the quantification of the diffusion process of water molecules. Applied to the brain, it is unique on providing \todo{Connection fiber and diffusion displacement!}\textcolor{red}{white matter fiber configuration in-vivo. In order to synthesize in detail the diffusion displacement}, high angular resolution imaging \todo{HARDI is an acquisition scheme or a synthesis technique?}\textcolor{red}{(HARDI) methods are used} and \textcolor{red}{these techniques are represented by orientation distribution functions (ODF)}, which consist \sout{of}\textcolor{blue}{in} an association between directions \sout{to a} \textcolor{blue}{and the probabilities of water diffusion along these directions}. \textcolor{blue}{Visualizing ODFs as glyphs helps in gaining insight into the local structure of the brain white matter in-vivo.} In this work we present an interactive polygon-based rendering scheme for ODF \textcolor{blue}{glyph}s. \textcolor{red}{In our approach, the ODFs are represented by samples in a spherical domain and we achieve interactive rates to render multiple glyphs of them by minimizing the CPU-GPU data traffic and using the instance rendering technique.} \todo{Local diffusion displacement profiles are not the aim!}\sout{The interactivity of the scheme may help researchers in the area to improve their understanding on local diffusion displacement profiles.}\textcolor{blue}{Performance measurements are presented to demonstrate the proposed GPU-based rendering algorithm's interactivity.}
-
-%%%%%Abaixo a versão após feedback
-Diffusion magnetic resonance imaging provides the quantification of the diffusion process of water molecules. Applied to the brain, it is unique in providing white matter fiber structures and connectivity in-vivo, relying on the fact that the  water molecules' displacements are greater along with the fiber orientation than perpendicular to it due to biological barriers. For reconstructing multiple fibers passing through the same voxel, high angular resolution diffusion imaging (HARDI) acquisition scheme has been introduced. Advanced methods for processing diffusion data were developed to synthesize HARDI data into orientation distribution functions (ODF), consisting in an association between directions and probabilities of water diffusion along with these directions on the sphere. Visualizing ODFs helps in gaining insight into the local structure of the brain white matter. In this work, we present an interactive GPU triangle-based rendering scheme for ODF. We show how the advanced GPU features may be exploited to make the triangle-based rendering competitive with the ray-casting one, despite ODF data's high dimensionality. Performance measurements are presented to demonstrate the proposed GPU-based rendering algorithm's interactivity.
-
+Diffusion magnetic resonance imaging provides the quantification of the diffusion process of water molecules. Applied to the brain, it is unique in providing white matter fiber structures and connectivity in-vivo, relying on the fact that the water molecules' displacements are greater along with the fiber orientation than perpendicular to it due to biological barriers. For reconstructing multiple fibers passing through the same voxel, high angular resolution diffusion imaging (HARDI) acquisition scheme has been introduced. Advanced methods for processing diffusion data were developed to synthesize HARDI data into orientation distribution functions (ODF), consisting of an association between directions and probabilities of water diffusion along with these directions on the sphere. Visualizing ODFs helps in gaining insight into the local structure of the brain white matter. In this work, we present an interactive GPU triangle-based rendering scheme for ODF. We show how the advanced GPU features may be exploited to make the triangle-based rendering competitive with the ray-casting one, despite ODF data's high dimensionality. Performance measurements are presented to demonstrate the proposed GPU-based rendering algorithm's interactivity.
 
 
 %We describe the formatting guidelines for the Journal of WSCG and WSCG proceedings adapted from the ACM and SIGGRAPH proceedings and recent WSCG templates.  Please, try to fix format of your contribution as close as possible if you use other tools.
@@ -166,7 +163,7 @@ medical visualization, HARDI, computer graphics, visualization.
 
 \copyrightspace
 
-Diffusion-weighted magnetic resonance imaging (DW-MRI) is a technique that aims to measure the random Brownian motion of water molecules. Applied to the brain, it is unique in providing in-vivo information on the white matter path. Imaging methods to synthesize the diffusion signals into functions have been a research subject for more than two decades.
+Diffusion-weighted magnetic resonance imaging (DWI) is a technique that aims to measure the random Brownian motion of water molecules. Applied to the brain, it is unique in providing in-vivo information on the white matter path. Imaging methods to synthesize the diffusion signals into functions have been a research subject for more than two decades.
 
 The first and the most applied method in the clinical area is diffusion tensor imaging (DTI) \cite{Basser1994}. The technique aims to fit a set of diffusion signal samples into a Gaussian 3D model.
 %%, of average zero, and the diffusion tensor is the covariance matrix.
@@ -179,7 +176,10 @@ High angular resolution diffusion imaging (HARDI) acquisitions and more advances
 %\sout{The most common method to visualize HARDI data through the\sout{se} advanced imaging methods is \sout{by} spherical polar plot\textcolor{blue}{s or HARDI} glyphs. These methods}
 %HARDI data are typically pre-processed into a model-free orientation distribution function (ODF) $\psi(\bm{u})$, which consist\sout{s} \sout{of}\textcolor{blue}{in} an association of a set of \sout{directions, represented by} unit \textcolor{blue}{directional} vectors\sout{,} to \sout{scalars representing the corresponding} diffusivity \textcolor{blue}{scalars. \todo{Use consistently one name.}The most common method to visualize ODFs is spherical polar plots, also known as HARDI glyphs and ODF glyphs}\sout{for each element in the domain}. 
 
-The most common method to visualize ODF data is through glyphs generated by spherical polar plots. The spherical polar plot is a surface whose points distance $R$ from the origin in a direction $\bm{u}$ consists in the orientation distribution function along that direction, meaning that $R(\bm{u})=\psi (\bm{u})$. It is useful to generate the glyphs using the min-max normalized version of the ODF \cite{TuchQBall2004} to emphasize the dominant diffusion directions. Eq. \ref{eq::normglifo} presents the magnitude of each vector $\bm{u}$ after the min-max normalization of $\psi(\bm{u})$ at the point $\bm{u}$ on the sphere. In this work, we call the spherical polar plot of an min-max normalized ODF as ODF glyphs.
+
+% for all $\bm{u} \in \mathbb{R}^3 and |\bm{u}| = 1$
+
+The most common method to visualize ODF data is through glyphs generated by its respective spherical polar plot. The spherical polar plot is a surface whose points distance $R(\bm{u})$ from the origin in a direction $\bm{u}$ consists in the orientation distribution function along that direction, meaning that $R(\bm{u})=\psi (\bm{u})$. It is useful to generate the glyphs using the min-max normalized version of the ODF \cite{TuchQBall2004} to emphasize the dominant diffusion directions. Eq. \ref{eq::normglifo} presents the magnitude of each vector $\bm{u}$ after the min-max normalization of $\psi(\bm{u})$ at the point $\bm{u}$ on the sphere. In this work, we call the spherical polar plot of an min-max normalized ODF as ODF glyphs.
 
 \begin{figure}[htb]
     \centering
@@ -236,11 +236,14 @@ In this work, we present an interactive GPU-accelerated \sout{polygon}\textcolor
 
 \todo{is rendering necessary for visualization?}\sout{This rendering scheme, integrated with visualization systems to diffusion images, can be a powerful tool for researchers in the area to assess a set of local diffusion profiles and improve their understanding of advanced methods for diffusion imaging.}
 
-This paper is \sout{divided in}\textcolor{blue}{organized into} \ref{sec::conclusions} sections. In Section \ref{sec::related_work}, we discuss the related works; \textcolor{blue}{in Section \ref{sec:superquadric_rendering}, we present the rendering pipeline proposed by Voltoline and Wu briefly;} in Section \ref{sec::odf_glyph_rendering}, we discuss the \textcolor{blue}{modifications introduced to make the pipeline appropriate for ODF glyph rendering.} \sout{proposed rendering scheme, the data structures associated, and an overview of the GPU shaders}; in \sout{the} Section \ref{sec::results}, we analyze the glyphs generated and show performance measurements; and in \sout{the} Section \ref{sec::conclusions}, we conclude the work.
+This paper is organized into \ref{sec::conclusions} sections. In Section \ref{sec::related_work}, we discuss the related works; \textcolor{blue}{in Section \ref{sec:superquadric_rendering}, we present the rendering pipeline proposed by Voltoline and Wu briefly;} in Section \ref{sec::odf_glyph_rendering}, we discuss the \textcolor{blue}{modifications introduced to make the pipeline appropriate for ODF glyph rendering.} \sout{proposed rendering scheme, the data structures associated, and an overview of the GPU shaders}; in Section \ref{sec::results}, we analyze the glyphs generated and show performance measurements; and in  Section \ref{sec::conclusions}, we conclude the work.
 
 \paragraph*{\textbf{Contributions}}
 
-The contributions of this paper are \textcolor{red}{....}
+The contribution of this paper is the proposal of an triangle-based interactive rendering scheme for ODFs glyphs represented by samples applied to a multimodal visualization environment for DWI. glyphs\textcolor{red}{....}
+
+
+
 
 
 %\todo{Redundant text. Instead, write the expected contribution.}\sout{The integration of this rendering scheme in a DW-MRI visualization can be  It improves the understanding of the output result of an diffusion imaging method applied to DW-MRI, as well as provide an a visual information of the underlying model where directional information of fibers is extracted to be used on brain fiber reconstruction. The real time factor can improve the visual interactivity of the research in the area.}
@@ -272,7 +275,7 @@ Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyp
 
 %adapted the seven-pass multimodal rendering algorithm proposed by Voltoline and Wu \cite{voltoline2021} to render spherical polar plots of high dimensionality.
 
-Voltoline \sout{et al.} \textcolor{blue}{and Wu} \cite{voltoline2021} proposed a real-time \sout{polygon}\textcolor{blue}{triangle}-based rendering scheme for \sout{a glyph representation of diffusion tensor called} superquadric \textcolor{blue}{tensor glyphs with much fewer parameters than ODF glyphs} \cite{Kindlmann2004}. \todo{Many aspects were exploited to have performance gain!}\sout{In their work, they minimize the CPU-GPU data traffic to a few parameters that customize the glyphs in each drawing request using the instance rendering technique, obtaining state-of-art performance results.} \textcolor{blue}{They exploit several modern GPU features to improve rendering performance, GPU-memory usage, and screen occupancy. Section \ref{sec:superquadric_rendering} gives a brief overview of their proposal.} \sout{These results influenced us to adapt their scheme into our proposed HARDI glyph rendering scheme}\textcolor{blue}{We showed in this work how to structure the ODF data in a compliant way with the superquadric tensor data so that the ODF data can take advantage of the same GPU processing flow}.
+Voltoline \sout{et al.} \textcolor{blue}{and Wu} \cite{voltoline2021} proposed a real-time triangle-based rendering scheme for \sout{a glyph representation of diffusion tensor called} superquadric \textcolor{blue}{tensor glyphs with much fewer parameters than ODF glyphs} \cite{Kindlmann2004}. \todo{Many aspects were exploited to have performance gain!}\sout{In their work, they minimize the CPU-GPU data traffic to a few parameters that customize the glyphs in each drawing request using the instance rendering technique, obtaining state-of-art performance results.} \textcolor{blue}{They exploit several modern GPU features to improve rendering performance, GPU-memory usage, and screen occupancy. Section \ref{sec:superquadric_rendering} gives a brief overview of their proposal.} \sout{These results influenced us to adapt their scheme into our proposed HARDI glyph rendering scheme}\textcolor{blue}{We showed in this work how to structure the ODF data in a compliant way with the superquadric tensor data so that the ODF data can take advantage of the same GPU processing flow}.
 
 
 %\section{Rendering scheme}
@@ -590,7 +593,7 @@ In this section, we describe the implementation of the rendering scheme in a mul
     \label{fig::ex_glyph_DWI_visualization}
 \end{figure}
 
-In this environment, there is a ray casting-based rendering for MRI/DWI volumes and a system for appearing samples detection proposed and described by Voltoline et al. \cite{voltoline2021}. 
+In this environment, there is a ray casting-based rendering for MRI/DWI volumes and a system for appearing samples detection proposed and described by Voltoline and Wu \cite{voltoline2021}. 
 
 In this environment, a HARDI method is computed and stored through its samples in a hemisphere of a spherical mesh for all samples contained in a DWI, as well as their respective translation coordinates to its center in the volume space.
 

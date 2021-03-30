@@ -258,7 +258,7 @@ The contribution of this paper are: (1) the proposal of a triangle-based for ODF
  
  \subsection{Polygon-based ODF glyph rendering}
 
-Shattuck et al. \cite{shattuck2008} \textcolor{blue}{tessellated a polar representation of an ODF with triangles by subdividing its polar domain \textcolor{magenta}{and generated its shape in CPU as a function of an analytical function in the sphere}. Whenever the modeling and viewing parameters were changed, the glyphs' vertices were recomputed and resent to the GPU.} The performance reported was 10 fps for a brain slice using a spherical mesh of 225 vertices per glyph, corresponding to approximately 2 million triangles \todo{How many glyphs? \textcolor{green}{They don't mention}}. \textcolor{blue}{We exploit, in this work, the modern GPU features to improve rendering performance, GPU-memory usage, and \todo{\textcolor{green}{The Raphael's concept of determining the mesh as function of how many pixels is occupied by a voxel is not something I am applying. In this work, the spherical mesh is fixed. That being said, there is a opportunity to do it}} screen occupancy.}
+Shattuck et al. \cite{shattuck2008} tessellated a polar representation of an ODF with triangles by subdividing its polar domain and generated its shape in CPU as a function of an analytical function in the sphere. The set of rendered glyphs refers to DWI's slices. Whenever the modeling and mesh's parameters changed, the glyphs' vertices were recomputed and resent to the GPU. The performance reported was 10 fps for a brain slice using a spherical mesh of 225 vertices per glyph, corresponding to approximately 2 million triangles \todo{How many glyphs? \textcolor{green}{They don't mention}}. We exploit, in this work, modern GPU features to improve rendering performance and GPU-memory usage. %and \todo{\textcolor{green}{The Raphael's concept of determining the mesh as function of how many pixels is occupied by a voxel is not something I am applying. In this work, the spherical mesh is fixed. That being said, there is a opportunity to do it} screen occupancy.}
 
 %ALGO RELEVANTE: ESSE TRABALHO DO SHATTUCK É O ÚLTIMO DA ÁREA QUE TEM ALGUMA COISA A VER COM O MEU, QUE É RENDERIZAR GLIFOS HARDI EM TEMPO REAL VIA POLIGONOS.
 
@@ -266,7 +266,7 @@ Shattuck et al. \cite{shattuck2008} \textcolor{blue}{tessellated a polar represe
 
  \subsection{Raycasting-based ODF glyph rendering}
 
-Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyphs. \textcolor{blue}{On the CPU, the center, the radius of the bounding sphere, and the bounding cube per spherical polar plot were computed. On the GPU, the raycasting algorithm was executed per pixel in the fragment shader. If the ray shot from a pixel through the view volume did not intersect the bounding sphere, the fragment was discarded. Otherwise, they performed a linear search, with discrete steps, for the intersection with ODF along the shot ray}. They achieved better performance than the algorithm presented by Shattuck et al. \cite{shattuck2008}. \todo{Is it the only reason for better performance?} \textcolor{blue}{The critical issue was the accuracy and efficiency of intersection finding with an ODF along the shot ray. When the ray was almost parallel to the glyph, a larger number of iterations might incur in some threads.} Almsick et al. \cite{almsick2011} improved the intersection search using the \textit{regula falsi} numerical method and bounding cylinders aligned with the viewing axis. They achieved higher time performance without sacrificing the rendered glyph quality, they reported that 9,000 glyphs could be generated at 30 fps.  \textcolor{blue}{The triangle-based rendering we applied in this work does not suffer from the root-finding problem.} 
+Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyphs. On the CPU, the center, the radius of the bounding sphere, and the bounding cube per spherical polar plot were computed. On the GPU, the raycasting algorithm was executed per pixel in the fragment shader. If the ray shot from a pixel through the view volume did not intersect the bounding sphere, the fragment was discarded. Otherwise, they performed a linear search, with discrete steps, for the intersection with ODF along the shot ray. They achieved better performance than the algorithm presented by Shattuck et al. \cite{shattuck2008}. \todo{Is it the only reason for better performance?} \textcolor{blue}{The critical issue was the accuracy and efficiency of intersection finding with an ODF along the shot ray. When the ray was almost parallel to the glyph, a larger number of iterations might incur in some threads.} Almsick et al. \cite{almsick2011} improved the intersection search using the \textit{regula falsi} numerical method and bounding cylinders aligned with the viewing axis. They achieved higher time performance without sacrificing the rendered glyph quality, they reported that 9,000 glyphs could be generated at 30 fps.  \textcolor{blue}{The triangle-based rendering we applied in this work does not suffer from the root-finding problem.} 
 
 %They also compared their approach to the polygon based rendering scheme proposed by Shattuck et al. \cite{shattuck2008}. 
 
@@ -275,12 +275,12 @@ Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyp
 \subsection{Triangle-based DTI's superquadric interactive rendering}
 \label{ssec:superquadric_rendering}
 
-Voltoline and Wu \cite{voltoline2021} proposed a real-time triangle-based rendering scheme for superquadric tensor glyphs \cite{Kindlmann2004}, which have much fewer parameters than ODF glyphs. They exploit several modern GPU features to achieve this goal and in this subsection, we discuss the rendering for DTI's superquadrics and the ideas we have brought to our work.
+Voltoline and Wu \cite{voltoline2021} proposed a real-time triangle-based rendering scheme for superquadric tensor glyphs \cite{Kindlmann2004}. They exploit several modern GPU features to achieve this goal and in this subsection, we discuss the rendering for DTI's superquadrics and the ideas we have brought to our work.
 
 %Section \ref{sec:superquadric_rendering} gives a brief overview of their proposal. \sout{These results influenced us to adapt their scheme into our proposed HARDI glyph rendering scheme}
 
 
-\textcolor{blue}{We showed in this work how to structure the ODF data in a compliant way with the superquadric tensor data so that the ODF data can take advantage of \sout{the same} \textcolor{magenta}{a similar} GPU processing flow}.
+%\textcolor{blue}{We showed in this work how to structure the ODF data in a compliant way with the superquadric tensor data so that the ODF data can take advantage of \sout{the same} \textcolor{magenta}{a similar} GPU processing flow}.
 
 
 %\section{Rendering scheme}
@@ -289,15 +289,17 @@ Voltoline and Wu \cite{voltoline2021} proposed a real-time triangle-based render
 
 
 
-Voltoline and Wu \cite{voltoline2021} show a pipeline for triangle-based superquadric glyph rendering integrated with a co-registered DWI with its respective anatomical T1 MRI visualization, where each shape is positioned accordingly in its respective voxel.
+They propose a pipeline for a triangle-based superquadric glyph rendering integrated with a co-registered DWI with its respective anatomical T1 MRI visualization, where each shape is positioned accordingly in its respective voxel.
 
-They explore many GPU's features to make their approach interactive in several passes. Firstly, the DWI's $b0$, its respective anatomical T1 MRI, the matrix that co-register both volumes and DTI data are uploaded to the GPU. In order to make their approach interactive, they show strategies to keep the CPU-GPU data traffic minimum, how to minimize the occupancy of the glyph's data on GPU's memory and how to make the amount of triangles on each glyph's mesh adaptive as a function of its dimension.
+In order to make their approach interactive, they propose strategies to keep the CPU-GPU data traffic minimum, how to minimize the occupancy of the glyph's data on GPU's memory and how to make the amount of triangles on each glyph's mesh adaptive as a function of its size.
 
-Since their glyphs rendering is integrated with a MRI slice and a ray-casting volumetric rendering scheme, their strategies consists in: detect DWI's on-screen voxels volume coordinates; estimate the glyph's mesh resolution dynamically; render the glyphs associated to to the detected voxels and minimize the occupancy of glyph's data on GPU's memory.
+In the initialization, the DWI's $b0$, its respective anatomical T1 MRI, the matrix that co-register both volumes and DTI data are uploaded to the GPU. 
 
-In order to detect on-screen voxels and estimate the mesh resolution, they propose an estimation of the volume's voxels coordinates on the onscreen buffer. The computation of the mesh's amount of triangles is a function of the maximum amount of pixels ($max_p$) that contains one single voxel, which is extracted from the onscreen buffer of the rendered volume as a transform feedback buffer. The mesh's amount of triangles is the same for all glyphs and is set in each drawing request in GPU's tessellation shader.
+Since their glyphs rendering is integrated with a MRI slice and a ray-casting visualization scheme, their strategies consists in: detect DWI's on-screen voxels volume coordinates; estimate the glyph's mesh resolution dynamically; render the glyphs associated to the detected voxels and minimize the occupancy of glyph's data on GPU's memory given the estimated mesh.
 
-Indirect instance rendering is used to minimize the occupancy of glyph's data on GPU's memory. The mesh computed in the tessellation shader is used and customized by each voxel's DTI-derived parameters to into its respective superquadric. Then, the each glyph is translated into its respective detected voxel's center in the volume space.
+In order to detect on-screen voxels and estimate the mesh resolution, they propose an estimation of the volume's voxels coordinates on the onscreen buffer of the rendered volume as a transform feedback buffer. Furthermore, this buffer also is used to do the mesh's amount of triangles computation, which is a function of the maximum amount of pixels ($max_p$) that contains one single voxel. The mesh's amount of triangles is the same for all glyphs and is set in each drawing request in GPU's tessellation shader.
+
+Indirect instance rendering is used to minimize the occupancy of glyph's data on GPU's memory. The mesh computed in the tessellation shader is used and customized by each voxel's DTI-derived parameters into its respective superquadric. Then, the each glyph is translated into its respective detected voxel's center in the volume space.
 
 % It consists in an uniform discretization of the spherical coordinates $(\phi, \theta)$ in the interval $[0,2\pi], [0, \pi]$ respectively.
 
@@ -616,13 +618,13 @@ and
 \end{align}
 
 
-where $t$ is the amount of subsets of the spherical mesh vertices $\Pi$. The amount of vertices on each mesh follows the property $V_n > V_t > V_{t-1} > ... > V_2 > V_1$. Each $\Pi_{1}, \Pi_{2}, \Pi_{3}, ..., \Pi_{t}$ has its respective index buffer $I_{1}, I_{2}, I_{3}, ..., I_{t}$ associated to form the triangles. $\Pi_k$ and $I_k$ ($k \leq t$) define the k-th subset of the highest resolution spherical mesh.
+where $t$ is the amount of subsets of the spherical mesh vertices $\Pi$. The amount of vertices on each mesh follows the property $V_n > V_t > V_{t-1} > ... > V_2 > V_1$. The sets $\Pi_{1}, \Pi_{2}, \Pi_{3}, ..., \Pi_{t}$ have their respective index buffer $I_{1}, I_{2}, I_{3}, ..., I_{t}$ associated to form the triangles. $\Pi_k$ and $I_k$ ($k \leq t$) define the k-th subset of the highest resolution spherical mesh.
 
 In order to provide the possibility of resolution adjustment on the glyphs mesh, we suggest an additional task at the initialization of the rendering scheme. In addition to uploading the mesh's vertices set of the highest resolution $\Pi$ as a data structure $[P_1, P_2, ..., P_N]$ in GPU, alongside its respective index buffer as pointed in the subsection \ref{ssec::precomputation}, we suggest that the $t$ index buffers that form the triangles using the points of $\Pi$'s subsets to be upload in the graphics unit.
 
 %The set $\Pi$ is upload on GPU at the initialization as a data structure $[P_1, P_2, ..., P_N]$, as well as all of the index buffers for all meshes derived. The ODF data per glyph is $[\psi_1(\bm{u}_1), \psi_1(\bm{u}_2), \dots, \psi_1(\bm{u}_{N})]$.
 
-One must be attentive to two procedures in the implementation for the chosen k-th subset of the highest resolution, in order to alternate between meshes. The first consists in the activation of the spherical mesh by only binding the selected spherical mesh's index buffer $I_k$. The second consists on setting the amount of columns $V_k$ that build the ODF matrix sent to GPU, which consists of the $V_k$ first ODF samples and must be coherent to the mesh used, thus reducing the CPU-GPU data-traffic in a factor of $1-V_k/V_n$.
+One must be attentive to two procedures in the implementation for the chosen k-th subset of the highest resolution, in order to alternate between meshes. The first consists in the activation of the spherical mesh by only binding the selected spherical mesh's index buffer $I_k$. The second consists on setting the amount of columns $V_k$ that build the ODF matrix sent to GPU, which consists of the $V_k$ first ODF samples and must be coherent to the mesh used. This procedure reducing the ODF matrix size and CPU-GPU data-traffic by a factor of $1-V_k/V_n$, compared to the use of one sized spherical mesh.
 
 
 
@@ -815,12 +817,12 @@ The rendering scheme is not only DWI applicable, but to other areas that use ODF
 
 %\section{Future works}
 
-For future works, we will do the following investigations:
-\begin{itemize}
-\item provide in-depth a performance comparison between the ray casting approach with the approach suggested in this work;
+%For future works, we will do the following investigations
+%\begin{itemize}
+%\item provide in-depth a performance comparison between the ray casting approach with the approach suggested in this work;
 %\item adapt the scheme by changing the data that customize the glyphs from ODF samples to spherical harmonics basis coefficients and compute its samples in GPU;
-\item investigate strategies to change the spherical mesh as a function of the amount and size of glyphs to be rendered in a drawing request, giving the possibility of decreasing its number of vertices in situations where glyphs are small and/or in high number in the scene.
-\end{itemize}
+%\item investigate strategies to change the spherical mesh as a function of the amount and size of glyphs to be rendered in a drawing request, giving the possibility of decreasing its number of vertices in situations where glyphs are small and/or in high number in the scene.
+%\end{itemize}
 
 
 

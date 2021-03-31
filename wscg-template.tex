@@ -362,7 +362,12 @@ In this section, we discuss the rendering scheme of the glyphs to be shown in th
 
 %The glyphs consist of spheres with each one of its radius points deformed by its respective ODF value.
 
-The scheme's initialization consists on setting up a mesh of a unit sphere centered in the coordinates system origin with N points set $\Pi = \{P_1, P_2, \dots, P_N\}$. The mesh is sent to the GPU with non-repeated points and its respective index buffer only once as an attribute to be instanced.
+The scheme's initialization consists on setting up a base sphere and a scaling factor for all glyphs.
+
+The scaling factor fits the glyphs size from the unity sphere to the voxels' dimensions so the user can afford to have the maximum screen occupancy. The scaling factor is given by $mS = min(spacing_x, spacing_y, spacing_z)$, where $spacing_x$, $spacing_y$, $spacing_z$ are the spaces between adjacent samples in x-, y- and z-axis, respectively.
+
+The sphere consists in a unit sphere centered in the coordinates system origin discretized in N points, which consists in the set $\Pi = \{P_1, P_2, \dots, P_N\}$ alongside its index buffer as an attribute. The mesh is sent to the GPU with respective index buffer only once as an attribute to be instanced by the elements that customize the glyphs, discussed in the subsection \ref{ssec::datastruct}.
+
 
 
 
@@ -408,7 +413,19 @@ The number of samples that customize a glyph is usually in the hundreds \cite{Tu
 %\sout{In this rendering scheme, the set consisting of the translation matrices and the ODF profiles consists are sent from the CPU to the GPU in each drawing request. Hence, in order to achieve the goal of interactivity, it is desirable that the data traffic between both parts is as little as possible.}
 
 \subsubsection{Translation}
+
+The coordinates $C= C(x, y, z)$ to translate a glyph from its reference system in the origin to its respective voxel's center, represented by its respective discrete integer indexes $(i, j, k)$, is computed as:
+\begin{align}
+ \label{eq::translation}
+    x = (i + 0.5).spacing_x \nonumber\\
+    x = (j + 0.5).spacing_y \\
+    z = (k + 0.5).spacing_z \nonumber
+\end{align}
+
+
 Let $M$ be the number of glyphs to be drawn, corresponding to the number of instances of the spherical mesh. The translation points are organized as a vector of points $[C_1,C_2, \dots, C_M]$, where $C_i= C_i(x_i, y_i, z_i)$, and sent to the GPU as an attribute. Each point of this attribute is unique for each of the $M$ instances of the spherical mesh.
+
+
 
 %The i-th index of the matrices set vector refers to the spherical mesh's i-th instance to be rendered centered at the point $C_i(x_i, y_i, z_i)$.
 
@@ -563,9 +580,10 @@ $\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm
 \subsubsection{GPU}
 Vertex Shader:
 \begin{enumerate}
-    \item Lookup the coefficient that customizes the glyphs and perform the scaling on the spherical vertex;
-    \item perform translation of the glyph;
-    \item scale and apply the model-view-projection transformation;
+    \item Lookup the coefficient that customize the glyphs' vertex; 
+    \item perform the scaling on the spherical vertex;
+    \item perform the translation of the vertex;
+    \item apply model-view transformation;
     \item compute color as a function of the spherical mesh vertex accordingly to Eq. \ref{eq::glyph_color} and send to the fragment shader.
 \end{enumerate}
 
@@ -624,7 +642,7 @@ In order to provide the possibility of resolution adjustment on the glyphs mesh,
 
 %The set $\Pi$ is upload on GPU at the initialization as a data structure $[P_1, P_2, ..., P_N]$, as well as all of the index buffers for all meshes derived. The ODF data per glyph is $[\psi_1(\bm{u}_1), \psi_1(\bm{u}_2), \dots, \psi_1(\bm{u}_{N})]$.
 
-One must be attentive to two procedures in the implementation for the chosen k-th subset of the highest resolution, in order to alternate between meshes. The first consists in the activation of the spherical mesh $(\Pi_k, I_k)$ by activating its index buffer $I_k$. The second consists on setting the amount of columns $V_k$ that build the ODF matrix sent to GPU, which consists of the $V_k$ first ODF samples and must be coherent to the mesh used. This procedure reduces the ODF matrix size by a factor of $1-V_k/V_n$.
+One must be attentive to two procedures in the implementation for the chosen k-th subset of the highest resolution, in order to alternate between meshes. The first consists in the activation of the spherical mesh $(\Pi_k, I_k)$ by activating its index buffer $I_k$. The second consists on setting the amount of columns $V_k$ that build the ODF matrix sent to GPU, which consists of the $V_k$ first ODF samples, which must be coherent to the vertices of $\Pi_k$. This procedure reduces the ODF matrix size by a factor of $1-V_k/V_n$.
 
 
 
@@ -635,17 +653,17 @@ One must be attentive to two procedures in the implementation for the chosen k-t
 
 \subsection{Example of a two-powered set of tessellated icosahedron meshes}
 
-In this section, we show an application on how to alternate meshes of spherical meshes on ODF's sampled over a two-powered order icosahedron's tesselation.
+In this section, we show an application on how to alternate meshes of spherical meshes on ODF's sampled over a two-powered order icosahedron's tessellation.
 
 The sphere obtained by the tessellation of the icosahedron is a set of spherical meshes often used by the HARDI community. Tuch \cite{TuchQBall2004} and Yeh et al. \cite{yeh2010} in their proposed diffusion imaging methods for HARDI works use this mesh category in their experiments to show the reconstruction of their respective ODFs. Descoteaux et al. \cite{descoteaux2007} use this category of mesh to project an ODF represented by base functions to compute its underlying fiber configuration. Additionally, this mesh is symmetrical, which makes the optimization described in the subsection \ref{sssec::optimization} applicable.
 
-The sphere mesh obtained by two-powered tessellation presents the following property:  if $k < n$, the vertices of the $2^{k}$ order tessellated icosahedron is a subset of $2^{n}$. The tessellation of order $2^k$ consists in a subdivision of each triangle of the the $2^{k-1}$ tessellation in four. These four triangles vertices' are formed by six points: three comes from the base triangle from $2^{k-1}$-th order and the other three are derived from these points as they are each pair's projection of the median points onto the sphere as illustrated in Fig. \ref{fig::subdivision_icosahedron}. The table \ref{tab::icosahedron_set} shows the amount of vertices and triangles of each tessellation.
+The sphere mesh obtained by two-powered tessellation presents the following property:  if $k < n$, the vertices of the $2^{k}$ order tessellated icosahedron is a subset of $2^{n}$. The tessellation of order $2^k$ consists in a subdivision of each triangle of the the $2^{k-1}$ tessellation in four. These four triangles vertices' are formed by six points: three comes from the base triangle from $2^{k-1}$-th order and the other three are derived from these points as they are each pair's projection of the median points onto the sphere as illustrated in Fig. \ref{fig::subdivision_icosahedron}. Table \ref{tab::icosahedron_set} shows the amount of vertices and triangles of each tessellation.
 
 \begin{figure}[ht]
     \centering
     %\rule{6cm}{3cm}
     \includegraphics[width=.50\linewidth, angle=0]{figs/icosahedron_example/ico_subdivision_V.png}
-    \caption{Triangle subdivision to form a $2^k$-th order of tessellation of the icosahedron from a $2^{k-1}$-th order. The triangle formed by v0, v1 and v2 is subdivided in four triangles, where the median points v01', v12'and v20' are computed and their projections v01, v12 on the unit sphere are added into the vertices set.
+    \caption{Triangle subdivision to form a $2^k$-th order of tessellation of the icosahedron from a $2^{k-1}$-th order. The triangle formed by v0, v1 and v2 is subdivided in four triangles, where the median points v01', v12'and v20' are computed and their projections on the unit sphere v01, v12 and v20 are added into the vertices set.
     }
     \label{fig::subdivision_icosahedron}
 \end{figure}

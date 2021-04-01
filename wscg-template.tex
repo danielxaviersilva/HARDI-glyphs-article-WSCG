@@ -314,7 +314,7 @@ Indirect instance rendering is used to minimize the occupancy of glyph data on G
 
 %\subsection{Applicability on ODF glyph rendering}
 
-Due to the ODF's high data dimensionality, it is impractical to keep its data on GPU for rendering. Thus, our strategy consists of pre-computing and storing on CPU, making them accessible by their respective voxels index. Our work's approach consists of, given a set of indices of voxels whose glyphs are requested to be rendered, how can one visualize it in interactive rates. We present strategies to minimize the CPU-GPU data traffic of ODF-related data and adjust the mesh's resolution at run time.% accordingly to the size of rendered voxels.
+Due to the ODF's high data dimensionality, it is impractical to keep its data on GPU for rendering. Thus, our strategy consists of pre-computing and storing its samples on CPU, making them accessible by their respective voxels index. Our work's approach consists of, given a set of indices of voxels whose glyphs are requested to be rendered, how can one visualize it in interactive rates. We present strategies to minimize the CPU-GPU data traffic of ODF-related data and adjust the mesh's resolution at run time.% accordingly to the size of rendered voxels.
 
 %The strategy showed in our work consists in, , reducing the CPU-GPU data traffic and keeping the . These indices set can refer to a slice, for example.
 
@@ -345,7 +345,7 @@ In an application that integrates the glyphs with DWI and anatomical visualizati
 \section{ODF Glyph Rendering}
 \label{sec::odf_glyph_rendering}
 
-In this section, we discuss the rendering scheme of the glyphs to be shown in the scene. The subsection \ref{ssec::precomputation} describes the procedures that must be done at the initialization of the rendering scheme; in the subsection \ref{ssec::datastruct}, we describe the input data structures that customize the glyphs, which consist the most of the CPU-GPU data traffic, and exploit symmetry of ODFs to reduce it; in the subsection \ref{ssec::rendering}, we provide a summary of the CPU and GPU shaders tasks.
+In this section, we discuss the rendering scheme of the glyphs to be shown in the scene. The subsection \ref{ssec::precomputation} describes the procedures that must be done at the initialization of the rendering scheme; in the subsection \ref{ssec::datastruct}, we describe the data structures that customize glyphs and consist of CPU-GPU data traffic in an drawing request, additionally, we describe a procedure that exploit the symmetry of ODFs to decrease the structure size; in the subsection \ref{ssec::rendering}, we provide a summary of the CPU and GPU shaders tasks.
 
 %The number of samples that customize a glyph is usually in the hundreds \cite{TuchQBall2004, yeh2010}, yielding a high amount of data sent to GPU in every drawing request for multiples of them. Thus, the suggested procedures in the subsection \ref{ssec::datastruct} consists on strategies to minimize the data-traffic and are crucial to the scheme.
 
@@ -364,7 +364,12 @@ In this section, we discuss the rendering scheme of the glyphs to be shown in th
 
 The scheme's initialization consists of setting up a base spherical mesh and a scaling factor for all glyphs and upload them on GPU.
 
-The scaling factor fits the size of the glyphs from the unit sphere to the voxels' dimensions so the user can afford to have the maximum screen occupancy. The scaling factor is given by $mS = min(spacing_x, spacing_y, spacing_z)$, where $spacing_x$, $spacing_y$, $spacing_z$ are the spaces between adjacent samples in x-, y- and z-axis, respectively.
+The scaling factor fits the size of the glyphs from the unit sphere to the voxels' dimensions so the user can afford to have the maximum screen occupancy. The scaling factor is given by 
+\begin{equation}
+mS = min(spacing_x, spacing_y, spacing_z)
+\end{equation}
+
+where $spacing_x$, $spacing_y$, $spacing_z$ are the spaces between adjacent samples in x-, y- and z-axis, respectively.
 
 The sphere consists in a unit sphere centered in the coordinates system origin. It is discretized in N points, given by the set $\Pi = \{P_1, P_2, \dots, P_N\}$, alongside its index buffer $I$. The mesh is sent to the GPU with its respective index buffer once as an attribute. The mesh is used as a base to be customized by the ODF samples. To achieve this goal, we use instance rendering, where this base geometry is customized by the elements discussed in the subsection \ref{ssec::datastruct}.
 
@@ -384,7 +389,7 @@ The sphere consists in a unit sphere centered in the coordinates system origin. 
 
 Two elements customize each one of the glyphs: ODF samples and their position. These elements are sent to the GPU in every draw request.
 
-First, let us define the vector set $\Upsilon$ as a function of $\Pi$ as shown in Eq. \ref{eq::u_vector_set}. The glyph geometry consists of deforming by scaling each point $P_k$ in the mesh to ODF value $\psi(\bm{u}_k)$.
+First, let us define the vector set $\Upsilon$ as a function of $\Pi$ as shown in Eq. \ref{eq::u_vector_set}. The glyph geometry consists of deforming the spherical mesh by scaling each point $P_k$ to its ODF value $\psi(\bm{u}_k)$.
 
 The translation places the deformed spherical mesh to be centered at the glyph's voxel center $C(x, y, z)$ in the volume space. This operation gives the user a clear visualization of the diffusion behavior at its respective location.
 
@@ -461,7 +466,7 @@ The ODF data sent to GPU consists of the N samples referring to the min-max norm
 \endgroup
 \end{equation}
 
-$\psi_{ij}$ refers to the ODF value $\psi_i(\bm{u}_j)$ of the i-th glyph associated with the direction $\bm{u}_j$, which scales the vertex $P_j$ of the spherical mesh. The i-th glyph refers to the ODF of the $d_i$-th voxel index, as illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}. $\bm{\Psi}_{MxN}$ is sent to the GPU as a 2D texture.
+$\psi_{ij}$ refers to the ODF value $\psi_i(\bm{u}_j)$ of the i-th glyph associated with the direction $\bm{u}_j$, which scales the vertex $P_j$ of the spherical mesh. The i-th glyph refers to the $d_i$-th voxel index's ODF, as illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}. $\bm{\Psi}_{MxN}$ is sent to the GPU as a 2D texture.
 
 %In a DWI pre-computed ODF's, the $M$ ODF samples to be rendered may refer to a selection of $M$ voxels, accessed through their respective indexes $\{d_1, d_2, ..., d_{M-1}, d_M\}$ in a DWI, as illustrated in Fig. .
 
@@ -469,7 +474,7 @@ $\psi_{ij}$ refers to the ODF value $\psi_i(\bm{u}_j)$ of the i-th glyph associa
     \centering
     %\rule{6cm}{3cm}
     \includegraphics[width=0.89\linewidth, angle=0]{figs/rendering_scheme/organizacao2GPU_red1.png}
-    \caption{Rendering scheme applied to a DWI visualization scheme. For each one of the $S$ DWI's samples, its respective ODF is pre-computed in $N$ samples. The $M$ red-contoured data consists of ODFs that are requested to be drawn. They setup $\bm{\Psi}^{\bm{h}}$ and are sent to the GPU. The ODF set to be rendered can refer to a slice, or a set of on-screen detected voxels \cite{voltoline2021}.}
+    \caption{Rendering scheme applied to a DWI visualization scheme. For each one of the $S$ DWI's samples, its respective ODF is pre-computed in $N$ samples. The $M$ red-contoured data consists of ODFs that are requested to be drawn. They setup $\bm{\Psi}$ and are sent to the GPU. The ODF set to be rendered can refer to a slice, or a set of on-screen detected voxels \cite{voltoline2021}.}
     \label{fig::vmtk_precomputed2GPU}
 \end{figure}
 
@@ -613,7 +618,7 @@ Fragment Shader:
 
 In this section we show a strategy to organize ODF samples so the amount of triangles of the spherical mesh is adaptive and a function of the amount of glyphs being rendered.
 
-Voltoline and Wu \cite{voltoline2021} address the importance of an adaptive mesh in order to keep the rendering speed and image quality compromise and proposed a computation of the mesh, where the amount of triangles is a function of the size of the glyphs to rendered in the scene. In their work, they propose an expression that establishes a relation between the mesh's amount of triangles $\tau$ and the maximum amount of pixels $\max_p$ containing a single voxel in a multimodal visualization environment for MRI and superquadrics glyphs, which is given by:
+Voltoline and Wu \cite{voltoline2021} address the importance of an adaptive mesh in order to keep the rendering speed and image quality compromise and proposed a computation of the mesh, where the amount of triangles is a function of the size of the glyphs to rendered in the scene. In their work, they propose an expression that establishes a relation between the mesh's amount of triangles $\tau$ and the maximum amount of pixels containing a single voxel  in a multimodal visualization environment for MRI and superquadrics glyphs ($\max_p$), which is given by:
 
 \begin{equation}
     \tau(max_p) = \lfloor 2(3 + 2\sqrt[4]{max_p})^2 \rfloor
@@ -670,7 +675,7 @@ In this section, we show an application on how to alternate meshes of spherical 
 
 The sphere obtained by the tessellation of the icosahedron is a set of spherical meshes often used by the HARDI community. Tuch \cite{TuchQBall2004} and Yeh et al. \cite{yeh2010} in their proposed diffusion imaging methods for HARDI works use this mesh category in their experiments to show the reconstruction of their respective ODFs. Descoteaux et al. \cite{descoteaux2007} use this category of mesh to project an ODF represented by base functions to compute its underlying fiber configuration. Additionally, this mesh is symmetrical, which makes the optimization described in the subsection \ref{sssec::optimization} applicable.
 
-The sphere mesh obtained by two-powered tessellation presents the following property:  if $k < n$, the vertices of the $2^{k}$ order tessellated icosahedron is a subset of $2^{n}$. The tessellation of order $2^k$ consists in a subdivision of each triangle of the the $2^{k-1}$ tessellation in four. These four triangles vertices' are formed by six points: three comes from the base triangle from $2^{k-1}$-th order and the other three are derived from these points as they are each pair's projection of the median points onto the sphere as illustrated in Fig. \ref{fig::subdivision_icosahedron}. Table \ref{tab::icosahedron_set} shows the amount of vertices and triangles of each tessellation.
+The sphere mesh obtained by two-powered tessellation presents the following property:  for $k < n$, the vertices of the $2^{k}$ order tessellated icosahedron is a subset of $2^{n}$. The tessellation of order $2^k$ consists in a subdivision of each triangle of the the $2^{k-1}$ tessellation in four. These four triangles vertices' are formed by six points: three comes from the base triangle from $2^{k-1}$-th order and the other three are derived from these points as they are each pair's projection of the median points onto the sphere as illustrated in Fig. \ref{fig::subdivision_icosahedron}. Table \ref{tab::icosahedron_set} shows the amount of vertices and triangles of each tessellation order.
 
 \begin{figure}[ht]
     \centering

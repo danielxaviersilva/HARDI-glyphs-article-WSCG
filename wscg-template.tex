@@ -276,7 +276,7 @@ Peeters et al. \cite{peeters2009} proposed a ray casting approach to render glyp
 %\subsection{Triangle-based DTI's superquadric interactive rendering}
 \label{ssec:superquadric_rendering}
 
-Voltoline and Wu \cite{voltoline2021} proposed a real-time triangle-based rendering scheme for superquadric tensor glyphs \cite{Kindlmann2004}. They explore several modern GPU features to achieve this goal, such as instanced rendering, transform feedback, adaptive triangular approximation of glyphs, and indirect rendering to render glyphs computed from DTI data uploaded in the graphics unit. Different from the superquadric glyphs, the data associated with ODF glyphs are much larger, which makes inviable to store it on GPU, thus we must devise a way to subdivide the large volume into a set of bricks that fit into the GPU memory for the glyphs to be rendered.
+Voltoline and Wu \cite{voltoline2021} proposed a real-time triangle-based rendering scheme for superquadric tensor glyphs \cite{Kindlmann2004}. They explore several modern GPU features to achieve this goal, such as instanced rendering, transform feedback, adaptive triangular approximation of glyphs, and indirect rendering to render glyphs computed from DTI data uploaded in the graphics unit. Different from the superquadric glyphs, the data associated with ODF glyphs are much larger, which makes it inviable to store it on GPU; thus, we must devise a way to subdivide the large volume into a set of bricks that fit into the GPU memory for the glyphs to be rendered.
 
 %http://people.seas.harvard.edu/~jbeyer/files/documents/beyer_star_large_volren_14.pdf
 
@@ -299,9 +299,9 @@ They propose a pipeline for a triangle-based superquadric glyph rendering overla
 
 %\todo{The following description is confusing.}
 
-In the initialization, the DWI's $b0$, its respective anatomical T1 MRI, the matrix that co-register both volumes and DTI data are uploaded to the GPU. 
 
-Since their glyph rendering is integrated with an MRI slice and a ray-casting visualization scheme, they divide the pipeline in three stages: render the co-registered DWI and T1 MRI, detect DWI's on-screen voxels volume coordinates and estimate the coverage of glyph's in pixels and compute its resolution; render the glyphs associated to the detected voxels. %and minimize the occupancy of glyph's data on GPU's memory given the estimated mesh.
+
+The DWI's $b0$, its respective anatomical T1 MRI, the matrix that co-register both volumes and DTI data are uploaded to the GPU. Then, the rendering algorithm is divided in three stages: render the co-registered DWI and T1 MRI, detect DWI's on-screen voxels volume coordinates and estimate the coverage of glyph's in pixels and compute its resolution; render the glyphs associated to the detected voxels. %and minimize the occupancy of glyph's data on GPU's memory given the estimated mesh.
 
 In order to detect on-screen voxels and estimate the mesh resolution, they propose an estimation of the volume's voxels coordinates on the onscreen buffer of the rendered volume as a transform feedback buffer. Furthermore, this buffer is also used to do the mesh's amount of triangles computation, which is a function of the maximum amount of pixels ($max_p$) containing one single voxel. The mesh's amount of triangles is the same for all glyphs and is set in each drawing request in GPU's tessellation shader.
 
@@ -323,10 +323,10 @@ Indirect instance rendering is used to minimize the occupancy of glyph data on G
 
 The approach to obtain the ODF glyph is to scale each point $P_K$ of a base spherical mesh by its respective $R(\bm{u_k})$, where $\bm{u_k}$ is the direction that links the mesh's center to $P_K$.
 
-The ODFs are computed through samples for each voxel and stored on CPU, and are accessible to each voxel. Thus we applied the display aware approach proposed by Voltoline and Wu \cite{voltoline2021}, which provides a set of $D = [d_1, d_2, ... d_M]$ of visible voxels indices, whose ODFs are on demand to be rendered. It however, causes the CPU-GPU data transfer penalty due to frequent changes in rendered images associated with the user's interaction. Thus, in this section, we present strategies to tackle the transfer at interactive rates.
+The ODFs are computed through samples for each voxel and stored on CPU, and are accessible by their respective voxel index. Thus we applied the display aware approach proposed by Voltoline and Wu \cite{voltoline2021}, which provides a set of $D = [d_1, d_2, ... d_M]$ of visible voxels indices, whose ODFs are on demand to be rendered. It, however, causes the CPU-GPU data transfer penalty due to frequent changes in rendered images associated with the user's interaction. Thus, in this section, we present strategies to tackle the transfer at interactive rates.
 
 
-Our key solution was to minimize data volume by exploring the visual perception resolution, GPU instancing, ODF data symmetry, and GPU texture memory allocation politics. Subsection \ref{ssec::glyph_resolution} describes the base spherical mesh that is deformed through a glyph ODF samples; in the subsection \ref{ssec::glyph_customization}, we describe the data structures that customize glyphs, which consist of CPU-GPU data traffic in a drawing request. The summary of the CPU and GPU shaders tasks follows below.
+Our key solution was to minimize data volume by exploring the visual perception resolution, GPU instancing, ODF data symmetry, and GPU texture memory allocation politics. Subsection \ref{ssec::glyph_resolution} describes the base spherical mesh that is deformed by the ODF samples to form the glyph; in the subsection \ref{ssec::glyph_customization}, we describe the data structures that customize glyphs, which consist of CPU-GPU data traffic in a drawing request. The summary of the CPU and GPU shaders tasks follows below.
 
 
 
@@ -416,14 +416,14 @@ mS = min(spacing_x, spacing_y, spacing_z)
 
 The spherical mesh consists in a unit sphere centered at the origin, discretized in N points, $\Pi = \{P_1, P_2, \dots, P_N\}$. We associate to each point in $\Pi$ a set of indices $I$ which reference the point's attributes data structure to form the sphere's triangles. The mesh forms the base geometry of all glyphs and is sent to the GPU once.
 
-For the sake of performance, we suggest that the mesh used is symmetric and its points' form lower resolution spherical meshes.
+For the sake of performance, we suggest that the mesh used is symmetric, and its points form lower resolution spherical meshes.
 
 The mesh is symmetrical if $P \in \Pi \implies -P \in \Pi$. We also suggest that the data structure sent to GPU has the pair of symmetrical points grouped, as $[P_1, -P_1, P_3, -P_3, \dots, P_{N-3}, -P_{N-3}, P_{N-1}, -P_{N-1}]$, where $P_{2K} = -P_{2K-1}$, $(1 \leq K \leq N/2)$.
 
 In order to make the resolution adaptive as a function of the glyph's size on screen, we suggest that $t$ lower resolutions symmetrical spherical meshes be derived from $(\Pi, I)$. Their vertices set $\Pi_{1}$, $\Pi_{2}$, ..., $\Pi_{t}$ follow the relation expressed below:
 
 \begin{align}
- \label{eq::subset_condition2}
+ \label{eq::subset_condition}
     &\Pi_{1} = \{P_1, P_2,... P_{N_1}\}; \nonumber\\
    % &\Pi_{2} = \{P_1, P_2,... P_{N_1}, P_{N_1+1}, ..., P_{N_2}\} = \Pi_1 \cup \{ P_{N_1+1}..., P_{N_2}\} \nonumber\\
     &\Pi_{2} = \Pi_1 \cup \{ P_{N_1+1}..., P_{N_2}\} \nonumber\\
@@ -436,7 +436,7 @@ In order to make the resolution adaptive as a function of the glyph's size on sc
 where $N > N_t > N_{t-1} > ... > N_2 > N_1$. The sets $\Pi_{1}, \Pi_{2}, \Pi_{3}, ..., \Pi_{t}$ are triangulated by their respective index set $I_{1}, I_{2}, I_{3}, ..., I_{t}$, whose amount triangles is given as $\tau_1, \tau_2, \tau_3, ..., \tau_t$. %Let us establish ($\Pi_k$, $I_k$) ($k \leq t$) define the k-th subset of the highest resolution spherical mesh, given by the pair ($\Pi$, $I$).
 
 
-These meshes can be alternated following Voltoline and Wu's trade-off $\tau > 8\sqrt{max_p}$; $max_p > 0$ \cite{voltoline2021}, where $\tau$ is the base mesh amount of triangles and $max_p$ the maximum amount of pixels containing a single DWI's voxel. This trade off establishes the minimum amount of triangles that does not sacrifice the image quality.
+These meshes can be alternated following Voltoline and Wu's trade-off $\tau > 8\sqrt{max_p}$; $max_p > 0$ \cite{voltoline2021}, where $\tau$ is the base mesh amount of triangles and $max_p$ the maximum amount of pixels containing a single DWI's voxel. This trade-off establishes the minimum amount of triangles that do not sacrifice the image quality.
 
 Let us define a set $\Delta$ of $t$ elements, where each element $\delta_k = (\tau_k/8)^2$; ($0 < k \leq t$). Keeping the minimum amount of triangles, given a $max_p$, we suggest a procedure that chooses one of the $t+1$ meshes that has the lowest amount of triangles that satisfies the trade off:
 
@@ -489,7 +489,7 @@ The ODFs can be organized in memory to match the vertices of the chosen spherica
 An ODF is symmetric if $R(\bm{u}) = R(-\bm{u})$. In the data structure we showed for the base geometry, we state that each $P$ and $-P$ in the sphere are grouped in the data struct, so the spherical representation per-point of the ODF becomes: $[R(\bm{u_1}), R(-\bm{u_1}), ..., R(\bm{u_{N-1}}), R(-\bm{u_{N-1}})]^T$, which has two equal elements in sequence. Thus, we suggest that the ODF $R(\bm{u})$ is represented by the $N/2$ sized vector $[R(\bm{u_1}), R(\bm{u_3}), ..., R(\bm{u_{N-3}})$, $R(\bm{u_{N-1}})]^T$, where each element $R(\bm{u}_{K})$ scales the points $P_{2K-1}$ and its symmetric $P_{2K}$ in the sphere.
 
 
-The setup of the ODF data that is sent to GPU consists in a matrix $\bm{R}_{\frac{V}{2}xM}$ where it takes $V/2$ samples of ODF of the $M$ requested ODFs. $V$ is the amount of points of the chosen spherical mesh, accordingly to the procedure described in subsection \ref{ssec::glyph_resolution}, and is contained in the set $\{N_1, N_2, ..., N_t, N\}$. Note that the data structure suggested for the spherical mesh, where a lower resolution sphere $(\Pi_K, I_k)$ is tessellated over the $N_K$ first vertices of $\Pi$ makes possible to set ODF data with the first $N_K/2$ data. The layout of the $\bm{R}$ is in Eq. \ref{eq::R}:
+The setup of the ODF data that is sent to GPU consists in a matrix $\bm{R}_{\frac{V}{2}xM}$ where it takes $V/2$ samples of ODF of the $M$ requested ODFs. $V$ is the amount of points of the chosen spherical mesh, according to the procedure described in subsection \ref{ssec::glyph_resolution}, and is contained in the set $\{N_1, N_2, ..., N_t, N\}$. Note that the data structure suggested for the spherical mesh, where a lower resolution sphere $(\Pi_K, I_k)$ is tessellated over the $N_K$ first vertices of $\Pi$ makes it possible to set ODF data with the first $N_K/2$ data. The layout of the $\bm{R}$ is in Eq. \ref{eq::R}:
 
 \begin{equation}
 \label{eq::R}
@@ -507,11 +507,11 @@ The setup of the ODF data that is sent to GPU consists in a matrix $\bm{R}_{\fra
 
 where $R_j(\bm{u})$ refers to the ODF of the $d_j$-th voxel requested to be rendered.
 
-$\bm{R}_{\frac{V}{2}xM}$ is sent to the GPU as a 2D texture with the RGBA format, which is used to maximize the occupancy in GPU's memory. Thus, the pair width and height are given by $(V/8, M)$. If $V/2$ is not divisible by four, one has to insert rows below the last row with dummy values. It is needed so that the first samples of an ODFs do not occupy the RGBA values of its previous and it says respect to the 2D texture allocation procedures.
+$\bm{R}_{\frac{V}{2}xM}$ is sent to the GPU as a 2D texture with the RGBA format, which is used to maximize the occupancy in GPU's memory. Thus, the pair width and height are given by $(V/8, M)$. If $V/2$ is not divisible by four, one has to insert rows below the last row with dummy values. It is needed so that the first samples of an ODFs do not occupy the RGBA values of its previous, and it says respect to the 2D texture allocation procedures.
 
 The rows refer to a set of samples of one ODF, which can be accessed directly by the Instance\_ID.
 
-The per-glyph ODF samples are accessed on GPU by its Vertex\_ID. As the elements of the same ODF are disposed in sequence in memory, the RGBA texel sample gives four values of ODF, which are associated to eight points of the mesh. For the same glyph, one texel of index K for a given instance refers to the threads which process vertices that have their respective Vertex\_ID from 8K to 8K+7. The mapping of the texel is illustrated in the Fig. \ref{fig::texelfetch}.
+The per-glyph ODF samples are accessed on GPU by its Vertex\_ID. As the elements of the same ODF are contiguous in memory, the RGBA texel sample gives four values of ODF, which are associated to eight points of the mesh. For the same glyph, one texel of index K for a given instance refers to the threads that process vertices that have their respective Vertex\_ID from 8K to 8K+7. The mapping of the texel is illustrated in Fig. \ref{fig::texelfetch}.
 
 \begin{figure}[ht]
     \centering
@@ -556,69 +556,97 @@ Finally, the OpenGL command to perform ODF lookup to deform the spherical mesh f
 
 \subsubsection{Visual aspects}
 
-Fig. \ref{fig::ex_glyph} shows glyphs for different meshes in detail obtained by different tessellation order of the icosahedron, for the meshes used as an example in the subsection \ref{sssec::ico_example}.
+Fig. \ref{fig::ex_glyph} shows glyphs for different meshes in detail obtained by different tessellation order of the icosahedron for the meshes used as an example in the subsection \ref{sssec::ico_example}.
 
 One can see that a spherical mesh defined by an $8^{th}$ (Fig. \ref{fig::ex_glyph8}) tessellation order of the icosahedron is fine enough that it does not have much visual difference compared to the $16^{th}$ order (Fig. \ref{fig::ex_glyph16}).
 
-In other hand, the mesh generated by $2^{nd}$ and $4^{th}$ order of tessellation looks much less smooth than the $8^{th}$, and these meshes are more appropriate when rendering many small glyphs, since it has less parameters to customize it.
+On the other hand, the mesh generated by $2^{nd}$ and $4^{th}$ order of tessellation looks much less smooth than the $8^{th}$, and these meshes are more appropriate when rendering many small glyphs since it has fewer parameters to customize it.
 
 %Fig. \ref{fig::ex_glyph_DWI_visualization} shows an application of the proposed scheme integrated into a DWI visualization system. At that size, one can not infer the shape of the glyphs, and the color is more dominant on the information given. In this scenario, there is an opportunity to decrease glyph resolution to decrease GPU memory usage.
 
-\begin{figure}[ht]
-\centering
-\captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
-%    \subfloat[$2^{nd}$ order.]{\includegraphics[width=.55\linewidth, angle=0]{figs/Results/Glyphs_2.png}
-%    \label{fig::ex_glyph2}
-%    }
+% \begin{figure}[ht]
+% \centering
+% \captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
+% %    \subfloat[$2^{nd}$ order.]{\includegraphics[width=.55\linewidth, angle=0]{figs/Results/Glyphs_2.png}
+% %    \label{fig::ex_glyph2}
+% %    }
 
-    \subfloat[$4^{th}$ order.]{\includegraphics[width=.55\linewidth, angle=0]{figs/Results/Glyphs_4.png}
-    \label{fig::ex_glyph4}
-    }
-    \\
-    \subfloat[$8^{th}$ order.]{\includegraphics[width=.50\linewidth, angle=0]{figs/Results/glyphs_8.png}
-    \label{fig::ex_glyph8}
-    }
-    \\
-    \subfloat[$16^{th}$ order.]{\includegraphics[width=.50\linewidth, angle=0]{figs/Results/glyphs_16.png}
-    \label{fig::ex_glyph16}
-    }
-     \caption{Polygon based HARDI glyphs visualization for different orders of tessellation of an icosahedron. The glyphs refer to the same DWI samples, with 32 gradient directions and b=1000$s/mm^2$. } %!!VER SE ISSO TA CERTO
-    \label{fig::ex_glyph}
-\end{figure}
+%     \subfloat[$4^{th}$ order.]{\includegraphics[width=.55\linewidth, angle=0]{figs/Results/Glyphs_4.png}
+%     \label{fig::ex_glyph4}
+%     }
+%     \\
+%     \subfloat[$8^{th}$ order.]{\includegraphics[width=.50\linewidth, angle=0]{figs/Results/glyphs_8.png}
+%     \label{fig::ex_glyph8}
+%     }
+%     \\
+%     \subfloat[$16^{th}$ order.]{\includegraphics[width=.50\linewidth, angle=0]{figs/Results/glyphs_16.png}
+%     \label{fig::ex_glyph16}
+%     }
+%      \caption{Polygon based HARDI glyphs visualization for different orders of tessellation of an icosahedron. The glyphs refer to the same DWI samples, with 32 gradient directions and b=1000$s/mm^2$. } %!!VER SE ISSO TA CERTO
+%     \label{fig::ex_glyph}
+% \end{figure}
 
 
 
 \subsection{Raw performance}
 
-In Fig. \ref{fig::benchmark_full} and \ref{fig::benchmark_half} follow the benchmark of the rendering scheme without and with the optimization for symmetrical ODFs. The data structures setup process is accelerated by using CPU parallelism. The computer used was a Macbook Pro Retina 13' early 2015, with an Intel Core i5 Dual-Core 2.7GHz CPU, 8 GB RAM, and an Intel Iris 6100 GPU with 1536 MB of memory.
+%In Fig. \ref{fig::benchmark_full} and \ref{fig::benchmark_half} follow the benchmark of the rendering scheme without and with the optimization for symmetrical ODFs. The data structures setup process is accelerated by using CPU parallelism. The computer used was a Macbook Pro Retina 13' early 2015, with an Intel Core i5 Dual-Core 2.7GHz CPU, 8 GB RAM, and an Intel Iris 6100 GPU with 1536 MB of memory.
 
-The experiment consisted of measuring the FPS as a function of the number of glyphs for different meshes. When measuring, we made sure that the screen occupancy was maximum for the number of glyphs chosen.
+In Fig. \ref{fig::benchmark} follow the benchmark of the proposed rendering scheme. The data structures setup process is accelerated by using CPU parallelism. The computer used was a Macbook Pro Retina 13' early 2015, with an Intel Core i5 Dual-Core 2.7GHz CPU, 8 GB RAM, and an Intel Iris 6100 GPU with 1536 MB of memory.
+
+The experiment consisted of measuring the FPS as a function of the number of glyphs for different meshes. When measuring, we made sure that the screen occupancy was maximum for the number of glyphs chosen. The base meshes were the spheres obtained by the $2^{nd}$, $4^{th}$, $8^{th}$, $16^{th}$ tessellation order of the icosahedron, which amount of vertices and triangles are in table \ref{tab::icosahedron_set}.
 
 
+
+
+%\begin{figure}[ht]
+%\centering
+%\captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
+%    \subfloat[General rendering scheme for ODFs benchmark ]{\includegraphics[width=.99\linewidth, angle=0]{figs/Benchmark/benchmark_full.png}
+%    \label{fig::benchmark_full}
+%    }
+%    \\
+%    \subfloat[Optimized rendering scheme for symmetrical ODFs benchmark ]{\includegraphics[width=.99\linewidth, angle=0]{figs/Benchmark/benchmark_half.png}
+%    \label{fig::benchmark_half}
+%    }
+%    \\
+%     \caption{Glyph rendering FPS $\times$ number of glyphs being rendered. The blue, orange, green and red curves correspond to a spherical mesh  generated by the $2^{nd}$ $4^{th}$, $8^{th}$ and $16^{th}$ order tessellation of the icosahedron. Their amount of vertices and triangles are in the table \ref{tab::icosahedron_set}.} %!!VER SE ISSO TA CERTO
+%    \label{fig::benchmark}
+%\end{figure}
 \begin{figure}[ht]
-\centering
-\captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
-    \subfloat[General rendering scheme for ODFs benchmark ]{\includegraphics[width=.99\linewidth, angle=0]{figs/Benchmark/benchmark_full.png}
-    \label{fig::benchmark_full}
+    \centering
+    %\rule{6cm}{3cm}
+    \includegraphics[width=1.00\linewidth, angle=0]{figs/Benchmark/benchmark_half.png}
+    \caption{Glyph rendering FPS $\times$ number of glyphs being rendered. The blue, orange, green and red curves correspond to a spherical mesh  generated by the $2^{nd}$, $4^{th}$, $8^{th}$, and $16^{th}$ order tessellation of the icosahedron. Their amount of vertices and triangles are in the table \ref{tab::icosahedron_set}.
     }
-    \\
-    \subfloat[Optimized rendering scheme for symmetrical ODFs benchmark ]{\includegraphics[width=.99\linewidth, angle=0]{figs/Benchmark/benchmark_half.png}
-    \label{fig::benchmark_half}
-    }
-    \\
-     \caption{Glyph rendering FPS $\times$ number of glyphs being rendered. The blue, orange, green and red curves correspond to a spherical mesh  generated by the $2^{nd}$ $4^{th}$, $8^{th}$ and $16^{th}$ order tessellation of the icosahedron. Their amount of vertices and triangles are in the table \ref{tab::icosahedron_set}.} %!!VER SE ISSO TA CERTO
     \label{fig::benchmark}
 \end{figure}
 
+\begin{table}[]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Order} & \textbf{\#Vertices} & \textbf{\#Triangles} \\ \hline
+1              & 12                 & 30                  \\ \hline
+2              & 42                 & 120                 \\ \hline
+4              & 162                & 480                 \\ \hline
+8              & 642                & 1920                \\ \hline
+16             & 2562               & 7680                \\ \hline
+$2^k$          & $10.4^k + 2$ & $30.4^k$           \\ \hline
+\end{tabular}
+\caption{Amount of vertices and triangles of 2-powered order tessellation of the icosahedron. For $k<n$, the vertices on the tessellation $2^k$ is a subset of $2^n$.}
+\label{tab::icosahedron_set}
+\end{table}
+
 \subsubsection{Discussion}
 
-The results indicate that our scheme gives satisfactory results for interactive usage. Using this scheme, it is possible to render thousands of glyphs in interactive rates using a $4^{th}$ order tessellation of the icosahedron and hundreds with $16^{th}$ order, as shown in Fig. \ref{fig::benchmark_half}.
+The results indicate that our scheme gives satisfactory results for interactive usage. Using this scheme, it is possible to render thousands of glyphs in interactive rates using a $4^{th}$ order tessellation of the icosahedron and hundreds with $16^{th}$ order.
 
-There is a relevant performance difference in the scheme by taking advantage of the ODF's symmetry. For example, in the 642 vertices spherical mesh, without optimization, the graphic hits 60 FPS with less than 2000 glyphs rendered, while taking advantage of the symmetry of ODFs makes it possible to render 4000, obtaining similar performance.
+%There is a relevant performance difference in the scheme by taking advantage of the ODF's symmetry. For example, in the 642 vertices spherical mesh, without optimization, the graphic hits 60 FPS with less than 2000 glyphs rendered, while taking advantage of the symmetry of ODFs makes it possible to render 4000, obtaining similar performance.
 
-One can make a comparison in a scheme where the per-glyph data traffic consists of vertices of triangles. Let us consider a $N$-sized spherical mesh, where each point is a vertex of 6 triangles, which is characteristic of a tessellated icosahedron. The data traffic of our approach per glyph consists of N/2 numbers plus one copy of translate coordinates, and the customization of the glyphs is done per vertex in parallel in the GPU. The information on how to set the triangles is provided once in the initialization process.
+%One can make a comparison in a scheme where the per-glyph data traffic consists of vertices of triangles. Let us consider a $N$-sized spherical mesh, where each point is a vertex of 6 triangles, which is characteristic of a tessellated icosahedron. The data traffic of our approach per glyph consists of N/2 numbers plus one copy of translate coordinates, and the customization of the glyphs is done per vertex in parallel in the GPU. The information on how to set the triangles is provided once in the initialization process.
 
-The polygon-based approach proposed by Shattuck et al. \cite{shattuck2008} does not discuss the data structures sent to GPU in each drawing request and mentions that they did not use GPU programming; furthermore, instance rendering was not available when the work was proposed. Certainly, the glyph customization is done in CPU, and the data traffic CPU-GPU consisted of a set of vertices extracted from the used spherical mesh with some redundancy so that the graphics API can form the polygons. It means that the amount of vertices data traffic is higher than $N$, corresponding to more than $3N$ numbers for each glyph. Hence, our approach's data traffic is less than 1/6 for the same spherical mesh for symmetrical ODF glyphs.
+The polygon-based approach proposed by Shattuck et al. \cite{shattuck2008} does not discuss the data structures sent to GPU in each drawing request and mentions that they did not use GPU programming; furthermore, instance rendering was not available when the work was proposed. The glyph customization is done in CPU, where the surface vertices is computed from its basis function and the data traffic CPU-GPU consisted of a set of vertices extracted from the used spherical mesh with some additional data information so that the graphics API can form the polygons. It means that the amount of vertices data traffic is higher than $3N$ numbers for each glyph. Hence, our approach's data traffic is less than 1/6 for the same spherical mesh for symmetrical ODF glyphs, which makes the interactivity possible.
 
 %In our approach, that amount of data traffic goes to N/2 floats. Other polygon-based approaches, such as using sending vertices of the glyphs associated to an index buffer, makes the data traffic go to 3N floats plus the size of index buffer and, additionally, regarding translation coordinates, one can choose to send this data as an attribute per vertex and increase the data traffic by 3N floats and do on GPU's threads, or the operation can be done on CPU, which is less efficient than sending once per geometry.
 
@@ -653,36 +681,63 @@ The polygon-based approach proposed by Shattuck et al. \cite{shattuck2008} does 
 
 
 
-\subsection{Multimodal rendering application}
+\subsection{Multimodal Rendering}
 \label{ssec::multimodal}
 
-In this section, we describe the implementation of the glyph rendering scheme in a multimodal visualization scheme for DWI, proposed by Voltoline and Wu \cite{voltoline2021}. Fig. \ref{fig::ex_glyph_DWI_visualization} show the result of the proposed rendering scheme applied to this environment.
+In this subsection, we describe the implementation of the glyph rendering scheme in a multimodal visualization scheme for DWI, proposed by Voltoline and Wu \cite{voltoline2021}. %Fig. \ref{fig::ex_glyph_DWI_visualization} show the result of the proposed rendering scheme applied to this environment.
 
-\begin{figure}[ht]
-    \centering
-    %\rule{6cm}{3cm}
-    \includegraphics[width=1.00\linewidth, angle=0]{figs/Results/glyphs_integrated_DWI.png}
-    \caption{Glyphs integrated into a DWI's visualization scheme. The glyphs are located in a mid axial region of the brain, cut in the left side. The spherical mesh used to generate the glyphs corresponds to an 8-th tessellated icosahedron. The DWI was acquired with 32 gradient directions and $b=1000s/mm^2$.
-    }
-    \label{fig::ex_glyph_DWI_visualization}
-\end{figure}
+%\begin{figure}[ht]
+%    \centering
+%    %\rule{6cm}{3cm}
+%    \includegraphics[width=1.00\linewidth, %angle=0]{figs/Results/glyphs_integrated_DWI.pn%g}
+%    \caption{Glyphs integrated into a DWI's %visualization scheme. The glyphs are located %in a mid axial region of the brain, cut in the %left side. The spherical mesh used to generate %the glyphs corresponds to an 8-th tessellated %icosahedron. The DWI was acquired with 32 %gradient directions and $b=1000s/mm^2$.
+%    }
+%    \label{fig::ex_glyph_DWI_visualization}
+%\end{figure}
+
+
 
 %\subsubsection{Multimodal rendering scheme setup}
 
-In the application, a high order method is applied to a DWI, where samples are computed and stored in the CPU in samples in a sphere's hemisphere over the 8-th tessellation order of the icosahedron for all voxels contained in a DWI, giving a total of 321 samples per voxel. Their respective translation coordinates to its center in the volume space were computed as well, accordingly to Eq. \ref{eq::translation}.
+In the application, a high order method is applied to a DWI, where samples are computed and stored in the CPU in samples in a sphere's hemisphere over the 16-th tessellation order of the icosahedron for all voxels contained in a DWI, giving a total of 1281 samples per voxel. Their respective translation coordinates to its center in the volume space were computed as well, accordingly to Eq. \ref{eq::translation}.
 
 %The multimodaThere is a ray casting-based rendering scheme for MRI/DWI volumes and a algorithm that estimates the on-screen voxels indices and its respective occupancy detection proposed by Voltoline and Wu \cite{voltoline2021}.
 
 
-The multimodal visualization is formed by a ray-casted DWI volume, co-registered with its respective co-registered anatomical T1 MRI. Additionally, the scheme performs an on-screen voxel detection and estimates its respective size so that only the glyphs of detected voxels are rendered.
+Fig. \ref{fig::vmtk_simplified} shows a simplified flowchart of the rendering scheme, which states the CPU and GPU tasks for visualization. The multimodal visualization is formed by a ray-casted DWI volume, co-registered with its respective anatomical T1 MRI. Additionally, the scheme performs an on-screen voxel detection and estimates its respective size so that only the glyphs of detected voxels are rendered.
 
-In order to detect the visible voxels and estimate their screen occupancy, in the process of ray casting the volume, there is a GPU-based algorithm that stores the on-screen DWI's voxels coordinates in the on-screen framebuffer. The set of voxel indices and the maximum amount of pixels that render a single voxel ($max_p$) are computed on GPU and transferred to the CPU. The list of detected voxel indices establishes the glyphs to be rendered; the metric $max_p$ defines the mesh's resolution to be used. A simplified flowchart is shown in Fig. \ref{fig::simplified}
+In order to detect the visible voxels and estimate their screen occupancy, in the process of ray casting the volume, there is a GPU-based algorithm that stores the on-screen DWI's voxels coordinates in the on-screen framebuffer. The set of voxel indices and the maximum amount of pixels that render a single voxel ($max_p$) are computed on GPU and transferred to the CPU. The list of detected voxel indices establishes the glyphs to be rendered; the metric $max_p$ defines the mesh's resolution to be used. A simplified flowchart is shown in Fig. \ref{fig::vmtk_simplified}
+
+\begin{figure}[ht]
+    \centering
+    %\rule{6cm}{3cm}
+    \includegraphics[width=1.0\linewidth, angle=0]{figs/rendering_scheme/fluxograma_glifosVMTK_2.png}
+    \caption{Multimodal rendering for ODF glyphs. The blue color represents the output to be drawn; the magenta color refers to pre-computed elements. The Volume Raycasting and visible voxel processing stages are proposed by Voltoline and Wu \cite{voltoline2021}. The Rendering ODF setup and ODF glyph stages are described in section \ref{sec::odf_glyph_rendering}. }
+    \label{fig::vmtk_simplified}
+\end{figure}
+
+
 
 %returns their respective indexes of the volume, which serves as the basis for the setup of the translation coordinates buffer and ODF data. The setup is made by copying the pre-computed data into the format discussed in the subsection \ref{ssec::datastruct} and sent to GPU. This process to ODF samples is illustrated in Fig. \ref{fig::vmtk_precomputed2GPU}.
 
 
 
-The spherical mesh used is chosen at run time as a function of $max_p$, and we used, in addition to the $8^{th}$ order tessellation of the icosahedron, the $2^{nd}$, and $4^{th}$ order mesh as well. The selection criterion is a function of $max_p$, as presented in the subsection \ref{ssec::resolution}, their respective values $max_{p1}$ and $max_{p2}$ are 225 and 3600, respectively. Their computation is a function of the number of triangles presented in the table \ref{tab::icosahedron_set}, accordingly to the expression $max_p = (\tau_k/8)^2$.
+The spherical mesh used is chosen at run time as a function of $max_p$, and we used, in addition to the $16^{th}$ order tessellation of the icosahedron, the $2^{nd}$, $4^{th}$, and $8^{th}$ order mesh as well. The selection criterion is a function of $max_p$, as presented in the subsection \ref{ssec::glyph_resolution}, their respective values $\delta_1$, $\delta_2$, and $\delta_3$ are 225, 3600, and 57600 respectively. Their computation is a function of the number of triangles presented in the table \ref{tab::icosahedron_set}, accordingly to the expression $\delta = (\tau/8)^2$. Fig. \ref{fig::multimodal} illustrates the ODF glyphs visualization comparatively at highest and lowest level of detail.
+
+
+\begin{figure}[h]
+\centering
+\captionsetup[subfloat]{farskip=0pt,nearskip=0pt}
+    \subfloat[2256 glyphs being rendered. The base geometry is a $2^{nd}$ order tessellation of the icosahedron sphere. ]{\includegraphics[width=.95\linewidth, angle=0]{figs/Results/LowResHighlighted_3.png}
+    \label{fig::multimodal_lowres}
+    }
+    \\
+    \subfloat[99 glyphs being rendered. The base geometry is a $16^{th}$ order tessellation of the icosahedron sphere.] {\includegraphics[width=.95\linewidth, angle=0]{figs/Results/HighResImgHighlighted_3.png}
+    \label{fig::multimodal_highres}
+    }
+    \caption{ODF Glyphs integrated into the multimodal visualization for MRI. The image refer to a coronal slice. The DWI was acquired with 32 gradient directions and $b=1000s/mm^2$ of a human subject. The glyphs get smoother as occupy more on-screen pixels. The glyphs in the white bounding box refers to the same ODFs.}
+    \label{fig::multimodal}
+\end{figure}
 
 
 The FPS results in the environment are presented below, %where 
@@ -712,7 +767,7 @@ This scheme can be integrated with other DW-MRI and MRI visualization schemes, a
 
 To our knowledge, this scheme, alongside the ray casting approaches \cite{peeters2009,almsick2011}, are the ones that give the possibility for fast and interactive HARDI data exploration.
 
-The rendering scheme is not only DWI applicable, but to other areas that use ODFs, represented by its samples.
+%The rendering scheme is not only DWI applicable, but to other areas that use ODFs, represented by its samples.
 
 %It can be a useful tool to render each ODF's glyph on its respective area in the scene.
 
@@ -823,43 +878,27 @@ The rendering scheme is not only DWI applicable, but to other areas that use ODF
 %\label{fg:code}
 %\end{algorithm}
 \section{Appendix}
-\subsection{Application with two-powered set of tessellated icosahedron meshes}
+\subsection{Set of two-powered order of tessellated icosahedron meshes as base geometries}
 \label{ssec::ico_example}
 
-In this section, we show an application on how to alternate meshes of spherical meshes on ODF's sampled over a two-powered order icosahedron's tessellation.
+In this section, we show an application on how to alternate meshes of spherical meshes on ODF's sampled over a two-powered order icosahedron's tessellation. This mesh is symmetrical and presents the following property: for $k < n$, the vertices of the $2^{k}$ order tessellated icosahedron is a subset of $2^{n}$.
 
-The sphere obtained by the tessellation of the icosahedron is a set of spherical meshes often used by the HARDI community. Tuch \cite{TuchQBall2004} and Yeh et al., \cite{yeh2010} in their proposed diffusion imaging methods for HARDI works, use this mesh category in their experiments to show the reconstruction of their respective ODFs. Descoteaux et al. \cite{descoteaux2007} use this category of mesh to project an ODF represented by base functions to compute its underlying fiber configuration. This mesh is symmetrical, and presents the following property:  for $k < n$, the vertices of the $2^{k}$ order tessellated icosahedron is a subset of $2^{n}$.
+%The sphere obtained by the tessellation of the icosahedron is a set of spherical meshes often used by the HARDI community. Tuch \cite{TuchQBall2004} and Yeh et al., \cite{yeh2010} in their proposed diffusion imaging methods for HARDI works, use this mesh category in their experiments to show the reconstruction of their respective ODFs. Descoteaux et al. \cite{descoteaux2007} use this category of mesh to project an ODF represented by base functions to compute its underlying fiber configuration. 
 
 This property can be corroborated by the fact that tessellation of order $2^k$ consists of a subdivision of each triangle of the $2^{k-1}$ tessellation in four. These four triangles vertices' are formed by six points: three of them are the same of the base triangle from $2^{k-1}$-th order, and the other three are derived from these points as they are each pair's projection of the median points onto the sphere as illustrated in Fig. \ref{fig::subdivision_icosahedron}. Table \ref{tab::icosahedron_set} shows the number of vertices and triangles of each tessellation order.
 
-\begin{figure}[ht]
+\begin{figure}[htb]
     \centering
     %\rule{6cm}{3cm}
-    \includegraphics[width=.50\linewidth, angle=0]{figs/icosahedron_example/ico_subdivision_V.png}
+    \includegraphics[width=.45\linewidth, angle=0]{figs/icosahedron_example/ico_subdivision_V.png}
     \caption{Triangle subdivision to form a $2^k$-th order of tessellation of the icosahedron from a $2^{k-1}$-th order. The triangle formed by v0, v1, and v2 is subdivided into four triangles, where the median points v01', v12'and v20' are computed, and their projections on the unit sphere v01, v12, and v20 are added into the vertices set.
     }
     \label{fig::subdivision_icosahedron}
 \end{figure}
 
-Thus, assigning $\Pi$ to be the vertices set of the $2^k$-th order of tessellation of the icosahedron and $\Pi_1$, $\Pi_2$, ..., $\Pi_{k-1}$ to be the $2^{1}$-th, $2^{2}$-th, ..., $2^{k-1}$-th order, respectively, we obtain a set of meshes that satisfy the properties described in the expressions \ref{eq::subset_condition1} and \ref{eq::subset_condition2}. In practice, we recommend $k$ to be equal to 3 or 4, which corresponds to 642 and 2562 samples on the sphere. Values of k above that may occur in a prohibitive amount of memory for ODF samples in a DWI.
+Thus, assigning $\Pi$ to be the vertices set of the $2^k$-th order of tessellation of the icosahedron and $\Pi_1$, $\Pi_2$, ..., $\Pi_{k-1}$ to be the $2^{1}$-th, $2^{2}$-th, ..., $2^{k-1}$-th order, respectively, we obtain a set of meshes that satisfy the properties described in the expression \ref{eq::subset_condition}. In practice, we recommend $k$ to be equal to 3 or 4, which requires 321 and 1281 ODF samples per voxel. Values of k above that may incur in a prohibitive amount of memory for ODF samples in a DWI.
 
 %In this section, we are going to consider $\Pi$ as the points of the spherical mesh generated by the $16^{th}$ tessellation order of the icosahedron, which gives $V_N = 2562$ points. Thus, $\Pi_1$, $\Pi_2$ and $\Pi_3$ are the vertices set of the $2^{nd}$, $4^{th}$ and $8^{th}$ order of the tessellated icosahedron, respectively. They 
-
-\begin{table}[]
-\centering
-\begin{tabular}{|c|c|c|c|}
-\hline
-\textbf{Order} & \textbf{\#Vertices} & \textbf{\#Triangles} \\ \hline
-1              & 12                 & 30                  \\ \hline
-2              & 42                 & 120                 \\ \hline
-4              & 162                & 480                 \\ \hline
-8              & 642                & 1920                \\ \hline
-16             & 2562               & 7680                \\ \hline
-$2^k$          & $10.4^k + 2$ & $30.4^k$           \\ \hline
-\end{tabular}
-\caption{Amount of vertices and triangles of 2-powered order tessellation of the icosahedron. For $k<n$, the vertices on the tessellation $2^k$ is a subset of $2^n$.}
-\label{tab::icosahedron_set}
-\end{table}
 
 %$10(2^k+1)(2^k-1)+12$
 

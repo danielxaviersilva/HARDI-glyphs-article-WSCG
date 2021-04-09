@@ -323,12 +323,10 @@ Indirect instance rendering is used to minimize the occupancy of glyph data on G
 
 The approach to obtain the ODF glyph is to scale each point $P_K$ of a base spherical mesh by its respective $R(\bm{u_k})$, where $\bm{u_k}$ is the direction that links the mesh's center to $P_K$.
 
-The ODFs are computed through samples for each voxel and are stored on CPU, which are accessible to each voxel. Thus we applied the display aware approach proposed by Voltoline and Wu \cite{voltoline2021}, which provides a set of $D = [d_1, d_2, ... d_M]$ of visible voxels indices, whose ODFs are on demand to be rendered. It however, causes the CPU-GPU data transfer penalty due to frequent changes in rendered images associated with the user's interaction. Thus, in this section, we present strategies to tackle the transfer at interactive rates.
+The ODFs are computed through samples for each voxel and stored on CPU, and are accessible to each voxel. Thus we applied the display aware approach proposed by Voltoline and Wu \cite{voltoline2021}, which provides a set of $D = [d_1, d_2, ... d_M]$ of visible voxels indices, whose ODFs are on demand to be rendered. It however, causes the CPU-GPU data transfer penalty due to frequent changes in rendered images associated with the user's interaction. Thus, in this section, we present strategies to tackle the transfer at interactive rates.
 
 
-Our key solution was to minimize data volume by exploring the visual perception resolution, GPU instancing, ODF data symmetry, and GPU texture memory allocation politics. \sout{The s}Subsection \ref{ssec::precomputation} describes the procedures that must be done at the initialization of the rendering scheme; in the subsection \ref{ssec::datastruct}, we describe the data structures that customize glyphs, which consist of CPU-GPU data traffic in a drawing request; additionally, we describe a procedure that takes advantage of the symmetry of ODFs to decrease the structure size; in the subsection \ref{ssec::rendering}, we provide a summary of the CPU and GPU shaders tasks; in the subsection \ref{ssec::resolution}, we propose additional procedures to make the number of triangles used to shape the glyphs adaptive in run time.
-
-
+Our key solution was to minimize data volume by exploring the visual perception resolution, GPU instancing, ODF data symmetry, and GPU texture memory allocation politics. Subsection \ref{ssec::glyph_resolution} describes the base spherical mesh that is deformed through a glyph ODF samples; in the subsection \ref{ssec::glyph_customization}, we describe the data structures that customize glyphs, which consist of CPU-GPU data traffic in a drawing request. The summary of the CPU and GPU shaders tasks follows below.
 
 
 
@@ -400,7 +398,7 @@ Fragment Shader:
 
 
 
-\subsection{Glyph mesh resolution}
+\subsection{Glyph base geometry}
 %\subsection{Initialization}
 \label{ssec::glyph_resolution}
 
@@ -418,9 +416,9 @@ mS = min(spacing_x, spacing_y, spacing_z)
 
 The spherical mesh consists in a unit sphere centered at the origin, discretized in N points, $\Pi = \{P_1, P_2, \dots, P_N\}$. We associate to each point in $\Pi$ a set of indices $I$ which reference the point's attributes data structure to form the sphere's triangles. The mesh forms the base geometry of all glyphs and is sent to the GPU once.
 
-For the sake of performance, we suggest that the mesh used is symmetrical and its points' form lower resolution spherical meshes.
+For the sake of performance, we suggest that the mesh used is symmetric and its points' form lower resolution spherical meshes.
 
-The mesh is symmetrical if $P \in \Pi \implies -P \in \Pi$. We also suggest that the data structure sent to GPU has the pair of symmetrical points grouped, as $[P_1, -P_1, P_3, -P_3, \dots, P_{N-3}, -P_{N-3}, P_{N-1}, -P_{N-1}]$, where $P_{2K+2} = -P_{2K+1}$, $(0 \leq K < N/2)$.
+The mesh is symmetrical if $P \in \Pi \implies -P \in \Pi$. We also suggest that the data structure sent to GPU has the pair of symmetrical points grouped, as $[P_1, -P_1, P_3, -P_3, \dots, P_{N-3}, -P_{N-3}, P_{N-1}, -P_{N-1}]$, where $P_{2K} = -P_{2K-1}$, $(1 \leq K \leq N/2)$.
 
 In order to make the resolution adaptive as a function of the glyph's size on screen, we suggest that $t$ lower resolutions symmetrical spherical meshes be derived from $(\Pi, I)$. Their vertices set $\Pi_{1}$, $\Pi_{2}$, ..., $\Pi_{t}$ follow the relation expressed below:
 
@@ -440,7 +438,7 @@ where $N > N_t > N_{t-1} > ... > N_2 > N_1$. The sets $\Pi_{1}, \Pi_{2}, \Pi_{3}
 
 These meshes can be alternated following Voltoline and Wu's trade-off $\tau > 8\sqrt{max_p}$; $max_p > 0$ \cite{voltoline2021}, where $\tau$ is the base mesh amount of triangles and $max_p$ the maximum amount of pixels containing a single DWI's voxel. This trade off establishes the minimum amount of triangles that does not sacrifice the image quality.
 
-Let us define a set $\Delta$ of $t$ elements, where each element $\delta_k = (\tau_k/8)^2$; ($0 < k \leq t$). Keeping the minimum amount of triangles, given a $max_p$, we suggest a heuristic that chooses one of the $t+1$ meshes that has the lowest amount of triangles that satisfies the trade off:
+Let us define a set $\Delta$ of $t$ elements, where each element $\delta_k = (\tau_k/8)^2$; ($0 < k \leq t$). Keeping the minimum amount of triangles, given a $max_p$, we suggest a procedure that chooses one of the $t+1$ meshes that has the lowest amount of triangles that satisfies the trade off:
 
 \begin{enumerate}
     \item if $max_p \leq \delta_1$, choose $(\Pi_1, I_1)$;
@@ -448,23 +446,22 @@ Let us define a set $\Delta$ of $t$ elements, where each element $\delta_k = (\t
     \item if $max_p > \delta_{t}$, choose $(\Pi, I)$
 \end{enumerate}
 
-For the $(\Pi_k, I_k)$ mesh chosen, one must be attentive to two procedures to select the mesh at run time. The first consists in the activation of the index set $I_k$ and, since the amount of the mesh vertices $N_k$ is smaller than $N$, the ODF data per glyph is reduced by a factor of $1-V_k/V_n$, as discussed further, in section !!!!!!!!!.
+For the $(\Pi_k, I_k)$ mesh chosen, one must be attentive to two procedures to select the mesh at run time. The first consists in the activation of the index set $I_k$ that triangulates the points of $\Pi_k$ contained in $\Pi$,  and since the amount of the mesh vertices $N_k$ is smaller than $N$, the ODF data per glyph is reduced by a factor of $1-N_k/N$, as discussed further, in subsection \ref{ssec::glyph_customization}.
 
 In the appendix, we show an application of the mesh's setup on spheres obtained by two-powered order icosahedron's tessellation.
 
 \subsection{Glyphs customization and GPU instancing}
+\label{ssec::glyph_customization}
 %\todo[inline]{Reduce the number of draw calls using GPU instancing. Each glyph is an instance referenced by gl\_instanceID.}
 
 In order to render M glyphs with one draw call, we use GPU instancing. The same spherical mesh geometry is used and is customized by each glyph's translation coordinates and ODFs samples.
 
 In this section, we show the data structures of the translation coordinates and ODF samples.
 
-The strategies exposed aims to decrease the amount of data per glyph to only three floats that refers to the translation coordinates; and $N_k/2$ floats that refer to ODF samples, where $N_k$ is the number of vertices of the chosen mesh.
+The strategies exposed aims to establish that the amount of data per glyph sent to the GPU to three floats that refers to the translation coordinates; and $N_k/2 + (4 - (N_k/2 \bmod 4))$ floats that refer to ODF samples, where $N_k$ is the number of vertices of the chosen mesh.
 
 
 \subsubsection{Translation}
-
-
 Let $C= C(dx, dy, dz)$ be the translation coordinates of a glyph from its reference system in the origin to its respective voxel's center. It is computed as a function of its respective discrete integer indexes $(i, j, k)$ and each x-, y-, z-axis spacing in adjacent samples as:
 
 \begin{align}
@@ -526,6 +523,37 @@ The per-glyph ODF samples are accessed on GPU by its Vertex\_ID. As the elements
 
 Finally, the OpenGL command to perform ODF lookup to deform the spherical mesh for a vertex being processed is texelFetch(\textbf{R}, ivec2( (gl\_VertexID)/8, gl\_InstanceID), 0 ) [(gl\_VertexID\%8)/2].
 
+
+
+
+%\begin{figure}[ht]
+    %\centering
+    %\rule{6cm}{3cm}
+    %\includegraphics[width=1.00\linewidth, angle=0]{figs/Results/Glyphs_onFAMAP_2.png}
+    %\caption{Glyphs integrated into a DW-MRI's fractional anisotropy map. The parallelepiped shows the region where the pyramidal tract (glyphs predominantly blue) crosses the corpus callosum (predominantly red). In the middle of the left face, the predominantly green glyphs corresponds to the region of the superior longitudinal fasciculus. The spherical mesh used corresponds to an 8-th tessellated icosahedron}
+    %\label{fig::ex_glyph_FAMAP}
+%\end{figure}
+
+%\subsubsection{Glyphs dynamic resolution adjustment}
+%\label{ssec::resolution}
+
+%For many small glyphs being rendered, the amount of parameters used may increase the CPU-GPU data traffic to a prohibitive amount of data that penalize the rendering scheme's interactivity. In this section, we show a strategy on how to use different base spherical meshes to be customized by the ODF samples so that it is adaptive and a function of the size that a glyph may occupy on the screen.
+
+
+
+
+
+
+
+
+
+
+%!!Falar de forma generica por aqui?
+
+\section{Experiments and results}
+
+\label{sec::results}
+
 \subsubsection{Visual aspects}
 
 Fig. \ref{fig::ex_glyph} shows glyphs for different meshes in detail obtained by different tessellation order of the icosahedron, for the meshes used as an example in the subsection \ref{sssec::ico_example}.
@@ -557,300 +585,6 @@ In other hand, the mesh generated by $2^{nd}$ and $4^{th}$ order of tessellation
      \caption{Polygon based HARDI glyphs visualization for different orders of tessellation of an icosahedron. The glyphs refer to the same DWI samples, with 32 gradient directions and b=1000$s/mm^2$. } %!!VER SE ISSO TA CERTO
     \label{fig::ex_glyph}
 \end{figure}
-
-
-%\begin{figure}[ht]
-    %\centering
-    %\rule{6cm}{3cm}
-    %\includegraphics[width=1.00\linewidth, angle=0]{figs/Results/Glyphs_onFAMAP_2.png}
-    %\caption{Glyphs integrated into a DW-MRI's fractional anisotropy map. The parallelepiped shows the region where the pyramidal tract (glyphs predominantly blue) crosses the corpus callosum (predominantly red). In the middle of the left face, the predominantly green glyphs corresponds to the region of the superior longitudinal fasciculus. The spherical mesh used corresponds to an 8-th tessellated icosahedron}
-    %\label{fig::ex_glyph_FAMAP}
-%\end{figure}
-
-\subsubsection{Glyphs dynamic resolution adjustment}
-\label{ssec::resolution}
-
-For many small glyphs being rendered, the amount of parameters used may increase the CPU-GPU data traffic to a prohibitive amount of data that penalize the rendering scheme's interactivity. In this section, we show a strategy on how to use different base spherical meshes to be customized by the ODF samples so that it is adaptive and a function of the size that a glyph may occupy on the screen.
-
-First, we propose a formulation of discrete spherical mesh sets that present suitable properties to be a base mesh for precomputed ODF samples and can be changed from one to another at run time, then we present a criterion that defines the mesh to be used to render the ODF as a function of its pixel occupancy estimation, where we present the Voltoline and Wu's \cite{voltoline2021} metrics to adjust it, then we describe the procedures that one must be attentive to alternate between meshes; in the appendix we provide an application of the presented concepts to the spherical mesh generated by the $2^k$-th order of tessellation of the icosahedron.
-
-
-Let $\Pi = \{P_1, P_2, ..., P_{N}\}$ be the vertices of the highest resolution spherical mesh, associated with its index buffer set $I$, with $\tau$ number of triangles and has the ODF samples projected onto it. Let $\Pi_{1}$, $\Pi_{2}$, ..., $\Pi_{t}$ be a set of vertices that define a spherical mesh such that:
-
-\begin{equation}
-\label{eq::subset_condition1}
-    \Pi_{1} \subset \Pi_{2} \subset \Pi_{3} \subset ... \subset \Pi_{t} \subset \Pi;
-\end{equation}
-and
-\begin{align}
- \label{eq::subset_condition2}
-    &\Pi_{1} = \{P_1, P_2,... P_{V_1}\}; \nonumber\\
-   % &\Pi_{2} = \{P_1, P_2,... P_{V_1}, P_{V_1+1}, ..., P_{V_2}\} = \Pi_1 \cup \{ P_{V_1+1}..., P_{V_2}\} \nonumber\\
-    &\Pi_{2} = \Pi_1 \cup \{ P_{V_1+1}..., P_{V_2}\} \nonumber\\
-    &\Pi_{3} = \Pi_2 \cup \{ P_{V_2+1}..., P_{V_3}\} \nonumber\\
-    &... \\
-    &\Pi_{t} = \Pi_{t-1} \cup \{ P_{V_{t-1}+1}..., P_{V_t}\} \nonumber\\
-    &\Pi = \Pi_{t} \cup \{ P_{V_t+1}..., P_{V_N}\}; \nonumber
-\end{align}
-
-
-where $t$ is the amount of subsets of the spherical mesh vertices $\Pi$. The amount of vertices on each mesh follows the property $V_n > V_t > V_{t-1} > ... > V_2 > V_1$. The sets $\Pi_{1}, \Pi_{2}, \Pi_{3}, ..., \Pi_{t}$ have their respective index buffer $I_{1}, I_{2}, I_{3}, ..., I_{t}$ associated to form the mesh's triangles, whose amount is given as $\tau_1, \tau_2, \tau_3, ..., \tau_t$. Let us establish ($\Pi_k$, $I_k$) ($k \leq t$) define the k-th subset of the highest resolution spherical mesh, given by the pair ($\Pi$, $I$).
-
-
-Voltoline and Wu \cite{voltoline2021} proposed a trade off between the mesh's amount of triangle ($\tau$) and the maximum amount of pixels containing a single DWI's voxel in a multimodal visualization environment for MRI ($\max_p$). The trade of is represented by $\tau > 8\sqrt{max_p}$; $max_p > 0$.
-
-Let us define a set $Max_p$ of $t$ elements, where each $max_{pk} = (\tau_k/8)^2$; ($0 < k \leq t$).
-
-In order to keep the glyphs resolution and the presented trade off, for a computed $max_p$, we suggest the following evaluation to choose the adequate spherical mesh: 
-
-\begin{enumerate}
-    \item if $max_p \leq max_{p1}$, choose $(\Pi_1, I_1)$;
-    \item if $max_{p1} < max_p \leq max_{pt}$, choose $(\Pi_k, I_k)$ such that $max_{p(k-1)} < max_p \leq max_{pk}$;
-    \item if $max_p > max_{pt}$, choose $(\Pi, I)$
-\end{enumerate}
-
-
-
-
-% In their work, they propose an expression that establishes a relation between the mesh's amount of triangles $\tau$ and the , which is given by:
-
-%\begin{equation}
-%\label{eq::pixel_res}
- %   \tau (max_p) = \lfloor 2(3 + 2\sqrt[4]{max_p})^2 \rfloor
-%\end{equation}$1-V_k/V_n$.
-%They formalize an analytical expression that set the amount of triangles of the superquadrics as a function of the maximum amount of pixels used to render a single raycasted volume's voxel, as shown in Eq. \ref{eq::pixel_res}. Thus, the resolution of the superquadric is adaptative to its respective size, the bigger it is, more details it has.
-%!!COLOCAR A EQUAÇÃO DO RAPHAEL.
-%\begin{equation}
-%    \label{eq::pixel_res}
-%\end{equation}
-
-%The equation compensates an advantage of the raycasting approaches over a non-dynamically set mesh's resolution, which is the amount of GPU's computational workload is proportional to the object's size.
-
-%As we proposed an rendering based in ODF samples stored in CPU, we describe a procedure to alternate the instanced spherical mesh on runtime. The ODF samples its vertices are a subset of the vertices of the highest resolution mesh used to sample the ODFs.
-
-%!!(MODIFICAR ISSO) The situation where each mesh is adequate is up to the user, and it can be as a function of the glyphs' size \cite{voltoline2021} and/or the amount of them rendered. Thus, we suggest a data structure of the spherical mesh and ODF samples in such a way that when alternating from one resolution to another, the change lies only in the active index buffer in the mesh and the amount of per-glyph ODF samples in CPU-GPU data traffic.
-
-In order to provide the possibility of resolution adjustment on the glyphs mesh, we suggest an additional task at the initialization of the rendering scheme. In addition to uploading the mesh's vertices set of the highest resolution $\Pi$ as a data structure $[P_1, P_2, ..., P_N]$ in GPU, alongside its respective index buffer as pointed in the subsection \ref{ssec::precomputation}, we suggest that the $t$ index buffers that form the triangles using the points of $\Pi$'s subsets to be uploaded in the graphics unit. Note that the order of mesh points has to be coherent with the expression  \ref{eq::subset_condition2}, since it can ease the setup process of the ODF matrix, which can be done by only iterating over $V_k$ (or $V_k/2$, if the optimization is applied) elements, for a chosen $(\Pi_k, I_k)$ mesh.
-
-%The set $\Pi$ is upload on GPU at the initialization as a data structure $[P_1, P_2, ..., P_N]$, as well as all of the index buffers for all meshes derived. The ODF data per glyph is $[\psi_1(\bm{u}_1), \psi_1(\bm{u}_2), \dots, \psi_1(\bm{u}_{N})]$.
-
-One must be attentive to two procedures to select the chosen k-th subset of the highest resolution mesh at runtime. The first consists of the activation of the spherical mesh $(\Pi_k, I_k)$ by activating its index buffer $I_k$. The second consists of setting the number of columns that setup $\bm{\Psi}$ or $\bm{\Psi^h}$ to be upload on GPU, which consists of the $V_k$ or $V_k/2$ first ODF samples. This procedure reduces the ODF matrix size by a factor of $1-V_k/V_n$.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\subsection{ODF data symmetry}
-%\subsubsection{Optimization on symmetrical ODFs}
-\label{sssec::optimization}
-
-This subsection shows an adaption of the data structure described in the subsection \ref{ssec::datastruct} to symmetrical ODFs and a strategy to decrease its related CPU-GPU data traffic by half.
-
-An ODF is symmetrical if $R(\bm{u}) = R(-\bm{u})$ for all $\bm{u}$ in the unit sphere. This symmetry applies to the diffusion behavior, which makes this section entirely applicable for rendering HARDI ODFs.%This property is present on all imaging methods for diffusion.
-
-Firstly, we suggest the use of a symmetrical spherical mesh. That means, if a point $P \in \Pi \implies -P \in \Pi$ as well. %As an example, a mesh generated by any order of a tessellated icosahedron fits this criterion.
-
-Secondly, we recommend that the chosen symmetrical spherical mesh's data structure is organized so that a point $P$ in an even index is followed by $-P$. This spherical mesh is sent to the GPU in the same structure as stated in the subsection \ref{ssec::precomputation}.
-
-%\textcolor{red}{Firstly, we suggest the use of a symmetrical spherical mesh, which can be, for example, any order of a sphere \todo{How? It must be explained!}generated by a tessellated icosahedron. We suggest as well that the vector containing its vertices is organized in such a way that the vector in the (2k)-th index is symmetrical to the (2k+1)-th.}
-
-Following these recommendations, the data structure of points in the sphere $[P_1, P_2, P_3, P_4, \dots, P_{N-1}, P_N]$ becomes $[P_1, -P_1, P_3, -P_3, \dots, P_{N-1}, -P_{N-1}]$, their associated $\Upsilon$ turns to $[\bm{u}_1, -\bm{u}_1, \bm{u}_3, -\bm{u}_3, \dots, \bm{u}_{N-1}, -\bm{u}_{N-1}]$ and $\bm{\Psi}$ becomes:
-
-\begin{equation*}
-\bm{\Psi} = 
-\begingroup % keep the change local
-\setlength\arraycolsep{2pt}
-\begin{bmatrix} 
-    \psi_1(\bm{u}_1) & \psi_1(-\bm{u}_1) & \cdots \psi_1(\bm{u}_{N-1}) & \psi_1(-\bm{u}_{N-1})  \\
-     \psi_2(\bm{u}_1)& \psi_2(-\bm{u}_1) & \cdots \psi_2(\bm{u}_{N-1}) & \psi_2(-\bm{u}_{N-1}) \\
-
-    \vdots & \vdots & \vdots & \vdots  \\
-     \psi_M(\bm{u}_1)&\psi_M(-\bm{u}_1) & \cdots \psi_M(\bm{u}_{N-1}) & \psi_M(-\bm{u}_{N-1})
-\end{bmatrix}
-\endgroup
-\end{equation*}
-
-where each of the (2k+1)-th column is the same as the (2k+2)-th ($0 \leq k < \frac{N}{2}$).
-
-Hence, we define a matrix $\bm{\Psi^h}_{Px\frac{M}{2}}$ such that $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$, which is described in the expression below:
-
-%\todo{Very confusing!}We \textcolor{blue}{re}define \textcolor{blue}{Eq. \ref{eq::Psi}}, \sout{a matrix $\bm{\Psi^h}_{Px\frac{N}{2}}$ where} \textcolor{blue}{such that} $\bm{\psi^h}_{ij} = \bm{\psi}_{i(2j-1)}$. \sout{that is sent to GPU on every drawing request. Its form is stated below:}\textcolor{blue}{It assumes the form}
-
-\begin{equation*}
-\label{eq::Psi_changed}
-\bm{\Psi^h} = 
-\begingroup % keep the change local
-\setlength\arraycolsep{2pt}
-\begin{bmatrix} 
-    \psi_1(\bm{u}_1) & \psi_1(\bm{u}_3) & \cdots \psi_1(\bm{u}_{N-3}) & \psi_1(\bm{u}_{N-1})  \\
-    
-     \psi_2(\bm{u}_1)& \psi_2(\bm{u}_3) & \cdots \psi_2(\bm{u}_{N-3}) & \psi_2(\bm{u}_{N-1}) \\
-
-    \vdots & \vdots & \vdots & \vdots  \\
-    
-     \psi_M(\bm{u}_1)&\psi_M(\bm{u}_3) & \cdots \psi_M(\bm{u}_{N-3}) & \psi_M(\bm{u}_{N-1})
-    
-\end{bmatrix}
-\endgroup
-\end{equation*}
-
-$\bm{\Psi^h}$ is sent to the GPU in the drawing requests in the same way as $\bm{\Psi}$ described in the subsection \ref{ssec::datastruct}, and the difference lies in the lookup process. On the GPU, the vertices corresponding to the 2k-th and (2k+1)-th Vertex\_ID in the spherical mesh of the same instance have the same value to lookup\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi^h}$, ivec2(gl\_InstanceID, gl\_VertexID/2), 0)[0]}, corresponding to the k-th column, which can be accessed accordingly in the vertex shader.
-
-%\sout{In}\textcolor{blue}{On} the GPU, the  in $\bm{\Psi}^h$, which corresponds to the K-th index of the matrix, which can be accessed accordingly in the vertex shader.
-
-
-
-%\subsection{Data Structures}
-\subsection{GPU texture memory usage}
-\label{ssec::datastruct}
-
-Each mesh glyph $i$ is individualized by two sets of attributes of the corresponding voxel: \textcolor{blue}{min-max normalized} ODF samples ($R_i(\bm{u})$) and displacement $(dx, dy, dz)$ relative to the origin.
-
-%First, let us define the vector set $\Upsilon$ as a function of $\Pi$ as shown in Eq. \ref{eq::u_vector_set}. The glyph geometry consists of deforming the spherical mesh by scaling each point $P_k$ to the ODF value $\psi(\bm{u}_k)$.
-
-The translation places the deformed spherical mesh to be centered at the glyph's voxel center $C(x, y, z)$ in the volume space. This operation gives the user a clear visualization of the diffusion behavior at its respective location.
-
-%\begin{equation}
-%\label{eq::u_vector_set}
-%\Upsilon = \{\bm{u}_k | \bm{u}_k = \frac{P_k - O}{|P_k - O|}, 
-%\begin{tabular}{@{}c@{}}
-%\small{$\forall P_k \in \Pi; O$ is the origin in } \\
-%\small{$\mathbb{R}^3$ and sphere's center}
-
-
-
-%\end{tabular}
-%\text{ }\}
-%\end{equation}
-
-%\forall P_k \in \Pi ; O \text{ is the origin } \\
-%\text{}
-
-%The number of samples that customize a glyph is usually in the hundreds \cite{TuchQBall2004, yeh2010}, yielding a high amount of data sent to GPU in every drawing request for multiples of them. Hence, this subsection aims to show a way to organize the data in the CPU, how to send it to the GPU, and how the shaders read it, so the CPU-GPU data traffic is as minimum as possible. 
-
-
-Let $M$ be the number of glyphs to be drawn and the number of drawing instances. These glyphs refer to the voxels indices set $D = \{d_1, d_2, ..., d_{M-1}, d_M\}$, which have their respective translation coordinates and ODF samples. The indices set can refer, for example, to slices or a set of detected on-screen voxels to be rendered \cite{voltoline2021}.
-
-
-
-
-%The translation matrix \sout{positions}\textcolor{blue}{places} the center of the spherical mesh to \sout{its respective position}\textcolor{blue}{the center of the corresponding voxel}. The ODF samples represent the diffusion profile\textcolor{blue}{s} that are particular to each glyph. \sout{These which determines t}\textcolor{blue}{T}he \textcolor{blue}{glyph geometry}\sout{shape of the glyph} \textcolor{blue}{is reshaped} by multiplying the \textcolor{blue}{mesh normal $\bm{n}$} \sout{vertex of the mesh associated with the direction of diffusion} to \sout{its}\textcolor{blue}{the} ODF value \textcolor{blue}{whose diffusion direction is parallel to $\bm{n}$}.
-
-%\sout{In this rendering scheme, the set consisting of the translation matrices and the ODF profiles consists are sent from the CPU to the GPU in each drawing request. Hence, in order to achieve the goal of interactivity, it is desirable that the data traffic between both parts is as little as possible.}
-
-
-\subsubsection{ODFs}
-
-The ODF data sent to GPU consists of the N/2 samples referring to the min-max normalized diffusion profiles for each $M$ glyphs to be drawn. We construct a $\bm{\Psi}_{NxM}$ matrix, where $M$ is the number of glyphs to be drawn, and $N$ is the number of samples of ODF used, as given in Eq. \ref{eq::Psi}:
-
-\begin{equation}
-\label{eq::Psi}
-\bm{R} = 
-\begingroup % keep the change local
-\setlength\arraycolsep{2pt}
-\begin{bmatrix} 
-    R_1(\bm{u}_1) & R_1(\bm{u}_2) & \cdots R_1(\bm{u}_{M-1}) & R_1(\bm{u}_{M})  \\    
-     R_2(\bm{u}_1)& R_2(\bm{u}_2) & \cdots R_2(\bm{u}_{M-1}) & R_2(\bm{u}_{M}) \\
-    \vdots & \vdots & \vdots & \vdots  \\    
-     R_N(\bm{u}_1) & R_N(\bm{u}_2) & \cdots R_N(\bm{u}_{M-1}) & R_N(\bm{u}_{M})
-\end{bmatrix}
-\endgroup
-\end{equation}
-
-%$r_{ij}$ refers to the point in the i-th ODF surface, which is obtaining by scaling the vertex $P_j$ of the spherical mesh. $\bm{R}_{NxM}$ is sent to the GPU as a 2D texture with RGBA format, which is used to maximize the occupancy in GPU's memory. Thus, the pair width and height are given by $(N/4, M)$. If $N$ is not divisible by four, one has to fulfill the remaining values with dummy values so it becomes divisible by for, it is necessary so that the first samples of other ODFs do not occupy the RGBA values of the previous.
-
-The per-glyph ODF samples are accessed on GPU by its Vertex\_ID. As the elements of the same ODF are disposed in sequence in memory, the RGBA texture sample gives four values of ODF, which are associated to eight points of the mesh. The Vertex\_ID 8K and 8K+1 are associated with the R value of the sample; the pair 8K+2 and 8K+3 are associated with the G sample; the pair 8K+4 and 8K+5 are associated with the B sample and 8K+6 and 8K+7 refers to the A sample. Furthermore, K refers to the index that, where K = 0 establish the samples to 8 first ODFs, K = 1, to the next eight and so forth.
-
-The rows refer to a set of samples of one ODF, which can be accessed directly by the Instance\_ID.
-
-Finally, the OpenGL command to perform ODF lookup to deform the spherical mesh for a vertex being processed is texelFetch($\bm{R}$,ivec2((gl\_VertexID)/8, gl\_InstanceID), 0)[(gl\_VertexID\%8)/2].
-
-
-
-%In a DWI pre-computed ODF's, the $M$ ODF samples to be rendered may refer to a selection of $M$ voxels, accessed through their respective indexes $\{d_1, d_2, ..., d_{M-1}, d_M\}$ in a DWI, as illustrated in Fig. .
-
-\begin{figure}[ht]
-    \centering
-    %\rule{6cm}{3cm}
-    \includegraphics[width=0.89\linewidth, angle=0]{figs/rendering_scheme/organizacao2GPU_red1.png}
-    \caption{Rendering scheme applied to a DWI visualization scheme. For each one of the $S$ DWI's samples, its respective ODF is pre-computed in $N$ samples. The $M$ red-contoured data consists of ODFs that are requested to be drawn. They setup $\bm{\Psi}$ and are sent to the GPU. The ODF set to be rendered can refer to a slice or a set of on-screen detected voxels \cite{voltoline2021}.}
-    \label{fig::vmtk_precomputed2GPU}
-\end{figure}
-
-
-
-On the GPU, the access of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader.
-
-
-
-%\textcolor{green}{The i-th instance index (Instance\_ID) corresponds to an instanced spherical mesh centered in its respective point $C_{i+1}$, and since ODFs samples of this glyph are stored in the (i+1)-th row of $\bm{\Psi}$, the Instance\_ID access this dimension.}
-
-%\textcolor{green}{The j-th vertex index (Vertex\_ID), in its turn, indicates the (j+1)-th point of the spherical mesh, which corresponds to the column of its respective ODF value in $\bm{\Psi}$.}
-
-Hence, the GPU access is performed by a simple lookup of the texture texel\footnote{In OpenGL, the lookup is done by the command texelFetch($\bm{\Psi}$, ivec2(gl\_InstanceID, gl\_VertexID), 0)[0]} as a function of the Vertex\_ID and Instance\_ID pair. Fig. \ref{fig::GPU2glyph} illustrates the ODF access for each instance and vertex in the GPU.
-
-%(MESMO PARÁGRAFO ACIMA, COM INDICAÇÕES OPENGL)The access in the GPU of ODFs to deform its respective sphere point is done by accessing the texture data through its instance and vertex indexes in the vertex shader. To achieve this, it is necessary that the vertex index (Vertex\_ID) (gl\_VertexID\footnotemark) of the direction of each vertex correspond to the column of its respective ODF value $ \psi (\bm{u}_j) $ in diffusion profile matrix. The access of the rows of the diffusion profile matrix, corresponding to the diffusion profiles in its respective point is accessible by the instance index (gl\_InstanceID\footnotemark [\value{footnote}]). Having the data organized in this established way, the access is done by perfoming a single lookup of the texel in the texture using the Vertex\_ID and Instance\_ID as a pair. In OpenGL, this can be done by the function texelFetch\footnotemark[\value{footnote}] with the row and column access arguments through the pair ( gl\_VertexID, gl\_InstanceID)\footnotemark [\value{footnote}] \footnotetext{All commands refer to OpenGL API and GLSL shading language.}. How to access the GPU of the profile matrix is illustrated in the Fig.\ref{fig::GPU2glyph}.
-
-%\todo[inline]{It is not understandable the caption!!! And it is not clear what is exactly the column and what is the row. It seems that your texture is 3D. columen (vertex\_ID), row (instance\_ID), depth (diffusion profile consisting of a series of values).}
-
-\begin{figure}[htb]
-    \centering
-    %\rule{6cm}{3cm}
-    \includegraphics[width=1.0\linewidth, angle=0]{figs/rendering_scheme/GPU2Glyph.png}
-    \caption{
-    Illustration of $\bm{\Psi}$ (in red) and its lookup procedure in the vertex shader by its Vertex\_ID and instance indexes for $M$ glyphs to be rendered. The data structure of $\Upsilon$ is in green. For an ODF $\psi_i(\bm{u})$, the value recovered for each $\mathbf{u}_j$ scales its respective mesh point $P_j$, deforming it.
-    %\textcolor{red}{Illustration of the data organization in the GPU of the profile matrix (red) sent as 2D-Texture. The vertices of the spherical mesh are in green. At each instance, the customization of the glyph occurs through the multiplication of the mesh vertex with its respective value, recovered in the vertex shader through its vertex index for the P glyphs to be rendered}.
-    }
-    \label{fig::GPU2glyph}
-\end{figure}
-
-%\section{Scheme Overview}
-%\label{sec::scheme_overview}
-%\subsection{Precomputation}
-%\begin{enumerate}
-%    \item Compute spherical mesh and its index buffer and send to GPU.
-%\end{enumerate}
-%\subsection{CPU}
-%\begin{enumerate}
-%    \item Compute matrix $\bm{\Psi}$ and send to GPU as a texture.
-%\end{enumerate}
-%\subsection{GPU}
-%\subsubsection{Vertex Shader}
-%\begin{enumerate}
-%    \item Lookup the coefficient that customize the glyphs and multiply by the spherical vertex;
-%    \item perform translation of the glyph;
-%    \item do scaling and camera related transformations;
-%    \item compute color as a function of the spherical mesh vertex accordingly to equation %\ref{eq::glyph_color} and send to fragment shader.
-%\end{enumerate}
-%\subsubsection{Fragment Shader}
-%\begin{enumerate}
-%    \item Set the output color as the rasterized color defined in the vertex shader.
-%\end{enumerate}
-
-
-
-%\section{Optimization}
-
-%\todo[inline]{Is it not better to put together with other part of description?}
-
-
-
-
-%!!Falar de forma generica por aqui?
-
-\section{Experiments and results}
-\label{sec::results}
-
 
 
 

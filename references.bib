@@ -1,3 +1,15 @@
+@article{Shapey2019,
+  doi = {10.3389/fnins.2019.00023},
+  url = {https://doi.org/10.3389/fnins.2019.00023},
+  year = {2019},
+  month = feb,
+  publisher = {Frontiers Media {SA}},
+  volume = {13},
+  author = {Jonathan Shapey and Sjoerd B. Vos and Tom Vercauteren and Robert Bradford and Shakeel R. Saeed and Sotirios Bisdas and Sebastien Ourselin},
+  title = {Clinical Applications for Diffusion {MRI} and Tractography of Cranial Nerves Within the Posterior Fossa: A Systematic Review},
+  journal = {Frontiers in Neuroscience}
+}
+
 @incollection{Vaillancourt2015,
   doi = {10.1007/978-3-319-15090-1_10},
   url = {https://doi.org/10.1007/978-3-319-15090-1_10},
@@ -72,10 +84,14 @@ journal = {Diffusion Tensor Imaging: A Practical Handbook},
 }
 
 @article{TuchQBall2004,
-  title={Q-Ball Imaging},
-  author={S. Tuch, David},
-  year={2004},
-  publisher={San Val}
+author = {Tuch, David},
+issn = {0740-3194},
+journal = {Magnetic resonance in medicine.},
+lccn = {2001212203},
+number = {6},
+publisher = {Wiley-Liss},
+title = {Q-Ball imaging},
+volume = {52},
 }
 
 @Misc{TractometerTool,
@@ -510,12 +526,15 @@ year = {2015}
 @article{voltoline2021,
 title = {Multimodal visualization of complementary color-coded FA map and tensor glyphs for interactive tractography ROI seeding},
 journal = {Computers \& Graphics},
+volume = {96},
+pages = {24-35},
 year = {2021},
 issn = {0097-8493},
-%doi = {https://doi.org/10.1016/j.cag.2021.03.001},
-%url = {https://www.sciencedirect.com/science/article/pii/S0097849321000315},
-author = {Raphael {Voltoline Ramos} and Wu {Shin Ting}},
-keywords = {Deterministic tractography, diffusion tensor imaging, region of interest seeding, multimodal glyph-based visualization, superquadric tensor glyph}
+doi = {https://doi.org/10.1016/j.cag.2021.03.001},
+url = {https://www.sciencedirect.com/science/article/pii/S0097849321000315},
+author = {Raphael Voltoline and Shin-Ting Wu},
+keywords = {Deterministic tractography, Diffusion tensor imaging, Region of interest seeding, Multimodal glyph-based visualization, Superquadric tensor glyph},
+abstract = {Fiber tractography is still unique in providing detailed imaging of white matter fiber bundles and connectivity between different brain regions. For finding specific fiber bundles, the most applied technique is tracking fibers from the seeds in a region of interest (ROI) within a diffusion tensor imaging (DTI) volume, or the limitation of tracking results to the ROI. Color-encoded fractional anisotropy (FA) map derived from DTI data, neuroanatomical atlas, and anatomical T1-weighted magnetic resonance imaging (MRI) data have been proposed as complementary data to improve the placement of an ROI. Mental mapping of colors in color-encoded FA map to directions requires a cognitive process. This paper addresses the fusion of shape with color to make the ROI drawing more a perceptual rather than a cognitive task. We propose the rendering of diffusion tensors as superquadric glyphs (shape) superimposed over the standard practice consisting of a color-encoded FA map (color) co-registered to a T1-weighted MRI image (anatomical constraint). A novel object-space algorithm that can efficiently render diffusion tensor glyphs is presented. A strategy for distributing the GPU hardware workload was devised to maximize its occupancy and reduce its stall. Implementations with a compute shader, and a geometry shader are detailed comparatively. We show that our proposal outperforms other rendering solutions. Preliminary quantitative comparisons of the nerve fibers reconstructed by interactive seeding strategies with and without the glyphs suggest that the first approach is more accurate in conveying directional information.}
 }
 
 @article{cho2008,
@@ -542,3 +561,13 @@ volume = {47},
 journal = {NeuroImage}%,
 %doi = {10.1016/j.neuroimage.2009.04.049}
 }
+
+@article{ting2014,
+  author={W. S. {Ting} and A. C. {Valente} and L. d. S. {Watanabe} and C. L. {Yasuda} and A. C. {Coan} and F. {Cendes}},
+  booktitle={2014 27th SIBGRAPI Conference on Graphics, Patterns and Images}, 
+  title={Pre-alignment for Co-registration in Native Space}, 
+  year={2014},
+  volume={},
+  number={},
+  pages={41-48},
+  doi={10.1109/SIBGRAPI.2014.40}}

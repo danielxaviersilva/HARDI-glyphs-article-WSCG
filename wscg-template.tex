@@ -415,63 +415,114 @@ Our key solution was to minimize data volume by exploring the visual perception 
 
 %\todo[inline]{It is not clear the data stored in the index buffer? The indices of the coordinates of each vertex? Did you create an vertex buffer object and indexing its elements to improve the memory usage?}
 
-The ODFs are sampled on a base spherical mesh $(\Pi, I)$, which consists in a unit sphere centered at the origin, discretized in N points, $\Pi = \{P_1, P_2, \dots, P_N\}$. We associate to each point in $\Pi$ an entry of the set of indices $I$, which reference the point's attributes, to store these attributes only once, even if used many times in rendering the mesh triangles. For data compression and performance purposes, we suggest symmetrical meshes which satisfy the property that $P \in \Pi \implies -P \in \Pi$ and organize them in the sequence $[P_1, -P_1, P_3, -P_3, \dots, P_{N-3}, -P_{N-3}, P_{N-1}, -P_{N-1}]$, where $P_{2K+2} = -P_{(2K+1}$, $(0 \leq K \leq \frac{N-2}{2})$.
+The ODFs are sampled on a base spherical mesh $(\Pi, I)$, which consists in a unit sphere centered at the origin, discretized in N points, $\Pi = \{P_1, P_2, \dots, P_N\}$. We associate to each point in $\Pi$ an entry of the set of indices $I$, which reference the point's attributes, so we store these attributes only once, even if used many times in rendering the mesh triangles. We establish two conditions for the mesh's data structure, given by $[P_1, P_2, \dots, P_N]$, which we take advantage of the ODF data symmetry, and make the mesh adaptive to viewing parameters. These conditions have a direct impact on the CPU-GPU data traffic, as discussed further in Subsection \ref{ssec::glyph_attributes}. Then, in the application, we use the two-powered tessellation order of the icosahedron derived meshes, which satisfy the established conditions and derive a heuristic expression that set one of these meshes at run time to be the glyphs' base geometry as a function of the viewing parameter $max_p$.
 
-\textcolor{red}{The category of spherical meshes that we chose that satisfies the conditions stated are derived from the two-powered tessellation order of the icosahedron \cite{???}.} 
-%They are symmetrical and present the following property: for $k < n$, the vertices of the $2^{k}$ order tessellated icosahedron is a subset of $2^{n}$.
+%The first condition allow us to decrease the data storage of ODF samples and its per-glyph CPU-GPU data traffic from the whole sphere to the half; and the second makes possible the exploration of the visual perception by allowing the reduction of the glyphs' base geometry resolution by using sub-meshes of the base spherical mesh, decreasing not only the GPU processing demands, as the per-glyph CPU-GPU data traffic.
 
-The vertices subset property can be corroborated by the fact that tessellation of order $2^k$ consists of a subdivision of each triangle of the $2^{k-1}$-th tessellation in four. These four triangles vertices' are formed by six points: three of them are the same of the base triangle from $2^{k-1}$-th order, and the other three are derived from these points as they are each pair's projection of the median points onto the sphere as illustrated in Fig. \ref{fig::subdivision_icosahedron}. Table \ref{tab::icosahedron_set} shows the number of vertices and triangles of each tessellation order.
+The first condition aims to take advantage of HARDI ODF's symmetry ($R(\bm{u}) = R(-\bm{u})$). We suggest that the base mesh $(\Pi, I)$ is symmetrical with respect to the origin, i.e. $P \in \Pi \implies -P \in \Pi$, and its respective data structure is organized in the sequence $[P_1, -P_1, P_3, -P_3, \dots, P_{N-3}, -P_{N-3}, P_{N-1}, -P_{N-1}]$, where $P_{2K+2} = -P_{2K+1}$, $(0 \leq K \leq \frac{N-2}{2})$.
 
-\begin{figure}[htb]
-    \centering
-    %\rule{6cm}{3cm}
-    \includegraphics[width=.45\linewidth, angle=0]{figs/icosahedron_example/ico_subdivision_V.png}
-    \caption{Triangle subdivision to form a $2^k$-th order of tessellation of the icosahedron from a $2^{k-1}$-th order. The triangle formed by v0, v1, and v2 is subdivided into four triangles, where the median points v01', v12'and v20' are computed, and their projections on the unit sphere v01, v12, and v20 are added into the vertices set.
-    }
-    \label{fig::subdivision_icosahedron}
-\end{figure}
+The second condition aims to make the glyph's base geometry adaptive as a sub-mesh of the base spherical mesh $(\Pi, I)$. Let $k$ be the number of sub-meshes of $(\Pi, I)$, where each sub-mesh is denoted by $(\Pi_i, I_i)$,  $(0 \leq i < k)$, and the number of vertices of each sub-mesh increases with its sub-index, i.e. if  $(0 \leq i < j < k)$, implies $|\Pi_j| > |\Pi_i|$. We suggest that, each sub-mesh $(\Pi_i, I_i)$ is symmetrical across the origin and the first $|\Pi_i|$ elements in  $\Pi$'s data structure corresponds to the elements of $\Pi_i$. Note that the condition establishes, for $i$, $j$ such $0 \leq i < j < k$ implies that $\Pi_i \subset \Pi_j$.
 
-Thus, assigning $\Pi$ to be the vertices set of the $2^k$-th order of tessellation of the icosahedron, the $2^{1}$-th, $2^{2}$-th, ..., $2^{k-1}$-th order meshes can be used at run time, following $max_p$. We suggest that $\Pi$'s data structure is organized such that the first 42 elements correspond to the $2^{nd}$ tessellation order, the 162 first elements corresponds to the $4^{th}$ tessellation order, and the first $10.4^q + 2$ elements corresponds to the $2^q$-th tessellation order $(q < k)$. Thus, we established $k-1$ sub-meshes of $(\Pi, I)$. \textcolor{red}{In practice, we recommend $k$ to be equal to 3 or 4, values of above that may incur a prohibitive amount of memory for ODF samples in a DWI.}
+The category of spherical meshes that we chose that satisfies the conditions stated are derived from the two-powered tessellation order of the icosahedron. The algorithm to obtain the $2^k$-th tessellation order is a iterative process repeated $k$ times that starts with an icosahedron. In each iteration, each triangle is subdivided in four, where the new vertices are computed as projection of the median points of each pair of connected vertices onto the sphere. The $2^k$-th tessellation order vertices set contains all vertices of the anterior iterations, and, addition to that, they are all symmetrical with respect to the origin. The algorithm to obtain this category of spherical mesh can be found in \cite{luna2012}.
+
+Therefore, assigning $(\Pi, I)$, $2^{k}$-th tessellation order of the icosahedron as the base geometry, we have a set of $k$ sub-meshes $(\Pi_0, I_0), (\Pi_1, I_1), ..., (\Pi_{k-1}, I_{k-1})$ as the $1^{st}$, $2^{nd}$, ... $2^{k-1}$-th tessellation order.
+
+%The vertices subset property can be corroborated by the fact that tessellation of order $2^k$ consists of a subdivision of each triangle of the $2^{k-1}$-th tessellation in four.
+
+
+
+The vertices and amount of triangles and the expression for the vertices and triangles number for each $2^k$ tessellation are in Table \ref{tab::icosahedron_set}. In practice, we recommend $k$ to be equal to 3 or 4, at most. Values of above those may incur a prohibitive amount of memory for pre-computed ODF samples in a DWI.
 
 \begin{table}[]
 \centering
 \begin{tabular}{|c|c|c|c|}
 \hline
 \textbf{Order} & \textbf{\#Vertices} & \textbf{\#Triangles} \\ \hline
-%1              & 12                 & 20                  \\ \hline
+1              & 12                 & 20                  \\ \hline
 2              & 42                 & 80                 \\ \hline
 4              & 162                & 320                 \\ \hline
 8              & 642                & 1280                \\ \hline
 16             & 2562               & 5120                \\ \hline
 $2^k$          & $10\times 4^k + 2$ & $20\times 4^k$           \\ \hline
 \end{tabular}
-\caption{Amount of vertices and triangles of 2-powered order tessellation of the icosahedron. For $k<n$, the vertices on the tessellation $2^k$ is a subset of $2^n$.}
+\caption{Amount of vertices and triangles of 2-powered order tessellation of the icosahedron.}% For $k<n$, the vertices on the tessellation $2^k$ is a subset of $2^n$.}
 \label{tab::icosahedron_set}
 \end{table}
 
-\textcolor{blue}{Aiming at greater efficiency without compromising the meshes' visual quality, we adaptively chose the mesh resolution among $t$ sub-meshes of $(\Pi, I)$ at run time as a function of $max_p$. Thus, we suggest that, for each $(\Pi_i, I_i)$ $(1 \leq i \leq t)$ lower resolution mesh, where $\Pi_i \in \Pi$, the first $|\Pi_i|$ elements in the $\Pi$'s data structure corresponds to $\Pi_i$'s vertices.}
+Assigning the base spherical mesh $(\Pi, I)$ to be the $16^{th}$ order of tessellation of the icosahedron, the meshes of order $1$, $2$, $4$ and $8$ are used as sub-meshes. Thus, the base spherical mesh's data structure that satisfies the two conditions is that, the first 12 elements corresponds to the icosahedron's vertices, 42 elements correspond to the $2^{nd}$ tessellation order, the 162 first elements corresponds to the $4^{th}$ tessellation order, the 642 first elements corresponds to the $8^{th}$ tessellation order, and, additionally, the symmetrical points are grouped in sequence in memory. %Thus, we established $k-1$ sub-meshes of $(\Pi, I)$. \textcolor{red}{In practice, we recommend $k$ to be equal to 3 or 4, values of above that may incur a prohibitive amount of memory for ODF samples in a DWI.}
 
-The mesh $(\Pi, I)$ and the indices set that triangulates the sub-meshes are sent to GPU once, and the base geometry is selected by a heuristic procedure based on $max_p$.
+The mesh $(\Pi, I)$ and the indices set that triangulates all the sub-meshes are sent to GPU once. Aiming at greater efficiency without compromising the meshes' visual quality, we adaptively choose the base geometry among these meshes by a heuristic procedure based on $max_p$ at run time.
 
-The mesh selection follows Voltoline and Wu's trade-off $\tau > 8\sqrt{max_p}$; $max_p > 0$ \cite{voltoline2021}, where $\tau$ is the base mesh amount of triangles and $max_p$ the maximum amount of pixels containing a single DWI's voxel. This trade-off establishes the minimum amount of triangles that do not sacrifice the image quality. Replacing this ratio with the expression of the amount of triangles as a function of icosahedron's tessellation order and mapping the icosahedron to be the lowest resolution mesh to be used, we derive $t$ ($t \leq k$) in Eq. \ref{eq::icosa_order} as the chosen $2^{t}$ tessellation of the icosahedron.
+The mesh selection follows Voltoline and Wu's trade-off $\tau > 8\sqrt{max_p}$; $max_p > 0$ \cite{voltoline2021}, where $\tau$ is mesh amount of triangles and $max_p$ the maximum amount of pixels containing a single DWI's voxel. This trade-off establishes the minimum number of triangles that do not sacrifice the image quality. Replacing this ratio with the expression of the amount of triangles as a function of icosahedron's tessellation order and mapping the icosahedron to be the lowest resolution mesh to be used, we derive $t$ ($t \leq 4$) in Eq. \ref{eq::icosa_order} as the chosen $2^{t}$-th tessellation order of the icosahedron:
 
 \begin{equation}
 \label{eq::icosa_order}
-     t = \lceil\frac{1}{4}\log_2{(\frac{2}{5}\sqrt{max_p} + 1)} \rceil
+     t = \lceil \frac{1}{2}\log_2{(\frac{2}{5}\sqrt{max_p} + 1)} \rceil
 \end{equation}
 
-Let us define a set $\Delta$ of $k-1$, sub-meshes where each element $\delta_i = (\tau_i/8)^2$; where $i = 1, 2, ..., k-1$ refers to the $2^{nd}$, $4^{th}$, ..., $2^{k-1}$-th tessellation order of the icosahedron. Keeping the minimum amount of triangles, given a $max_p$, we suggest a procedure that chooses one of the $k$ meshes that has the lowest amount of triangles that satisfies the trade off:
+%where it chooses the base geometry among the available based on the least amount of triangles that satisfies the trade-off.
+
+
+
+%Aiming at greater efficiency without compromising the meshes' visual quality, we adaptively chose the mesh resolution among $t$ sub-meshes of $(\Pi, I)$ at run time as a function of $max_p$. Thus, we suggest that, for each $(\Pi_i, I_i)$ $(1 \leq i \leq t)$ lower resolution mesh, where $\Pi_i \in \Pi$, the first $|\Pi_i|$ elements in the $\Pi$'s data structure corresponds to $\Pi_i$'s vertices.
+
+%Let us define a set $\Delta$ of $k-1$, sub-meshes where each element $\delta_i = (\tau_i/8)^2$; where $i = 1, 2, ..., k-1$ refers to the $2^{nd}$, $4^{th}$, ..., $2^{k-1}$-th tessellation order of the icosahedron. Keeping the minimum amount of triangles, given a $max_p$, we suggest a procedure that chooses one of the $k$ meshes that has the lowest amount of triangles that satisfies the trade off:
+
+%\textcolor{red}{The category of spherical meshes that we chose that satisfies the conditions stated are derived from the two-powered tessellation order of the icosahedron \cite{???}.} 
+%They are symmetrical and present the following property: for $k < n$, the vertices of the $2^{k}$ order tessellated icosahedron is a subset of $2^{n}$.
+
+
+
+For the $2^t$-th tessellation order chosen as a base geometry, one must be attentive to two procedures to select the mesh at run time. The first consists in the activation of its respective index buffer for the draw call. The second consists in setting the amount of per-glyph data sent to GPU as a function of its vertices, as discussed further in the subsection \ref{ssec::glyph_attributes}.
+
+Finally, we suggest scaling the normalized base mesh by the scaling factor $mS$ to afford the maximal screen occupancy.
+
+\begin{equation}
+\label{eq:spacings}
+mS = min(spacing_x, spacing_y, spacing_z)
+\end{equation}
+
+where $spacing_x$, $spacing_y$, $spacing_z$ are the spacing between adjacent DWI samples in the x-, y- and z-axis, respectively.
+
+
+%\subsection{O QUE FAZER COM ISSO?}
+%The vertices subset property can be corroborated by the fact that tessellation of order $2^k$ consists of a subdivision of each triangle of the $2^{k-1}$-th tessellation in four. These four triangles vertices' are formed by six points: three of them are the same of the base triangle from $2^{k-1}$-th order, and the other three are derived from these points as they are each pair's projection of the median points onto the sphere as illustrated in Fig. \ref{fig::subdivision_icosahedron}. Table \ref{tab::icosahedron_set} shows the number of vertices and triangles of each tessellation order.
 
 
 
 
-\begin{enumerate}
-    \item if $max_p \leq \delta_1$, choose $2^{nd}$ tessellation order;
-    \item if $\delta_{1} < max_p \leq \delta_{k-1}$, choose the $2^{t}$-th tessellation order such that $\delta_{(t-1)} < max_p \leq \delta_{t}$;
-    \item if $max_p > \delta_{k-1}$, choose $(\Pi, I)$ - $2^{k}$-th tessellation order
-\end{enumerate}
 
-\textcolor{blue}{For the mesh $(\Pi_i, I_i)$ chosen, one must be attentive to two procedures to select the mesh at run time. The first consists in the activation of its respective index buffer for the draw call. The second consists in changing the amount of per-glyph data sent to GPU, as discussed further in the subsection \ref{ssec::glyph_attributes}.}
+% \begin{figure}[htb]
+%     \centering
+%     %\rule{6cm}{3cm}
+%     \includegraphics[width=.45\linewidth, angle=0]{figs/icosahedron_example/ico_subdivision_V.png}
+%     \caption{Triangle subdivision to form a $2^k$-th order of tessellation of the icosahedron from a $2^{k-1}$-th order. The triangle formed by v0, v1, and v2 is subdivided into four triangles, where the median points v01', v12'and v20' are computed, and their projections on the unit sphere v01, v12, and v20 are added into the vertices set.
+%     }
+%     \label{fig::subdivision_icosahedron}
+% \end{figure}
+
+
+
+
+
+%\textcolor{blue}{Aiming at greater efficiency without compromising the meshes' visual quality, we adaptively chose the mesh resolution among $t$ sub-meshes of $(\Pi, I)$ at run time as a function of $max_p$. Thus, we suggest that, for each $(\Pi_i, I_i)$ $(1 \leq i \leq t)$ lower resolution mesh, where $\Pi_i \in \Pi$, the first $|\Pi_i|$ elements in the $\Pi$'s data structure corresponds to $\Pi_i$'s vertices.}
+
+
+
+
+
+%Let us define a set $\Delta$ of $k-1$, sub-meshes where each element $\delta_i = (\tau_i/8)^2$; where $i = 1, 2, ..., k-1$ refers to the $2^{nd}$, $4^{th}$, ..., $2^{k-1}$-th tessellation order of the icosahedron. Keeping the minimum amount of triangles, given a $max_p$, we suggest a procedure that chooses one of the $k$ meshes that has the lowest amount of triangles that satisfies the trade off:
+
+
+
+
+%\begin{enumerate}
+%    \item if $max_p \leq \delta_1$, choose $2^{nd}$ tessellation order;
+%    \item if $\delta_{1} < max_p \leq \delta_{k-1}$, choose the $2^{t}$-th tessellation order such that $\delta_{(t-1)} < max_p \leq %\delta_{t}$;
+%    \item if $max_p > \delta_{k-1}$, choose $(\Pi, I)$ - $2^{k}$-th tessellation order
+%\end{enumerate}
+
+%\textcolor{blue}{For the mesh $(\Pi_i, I_i)$ chosen, one must be attentive to two procedures to select the mesh at run time. The first consists in the activation of its respective index buffer for the draw call. The second consists in changing the amount of per-glyph data sent to GPU, as discussed further in the subsection \ref{ssec::glyph_attributes}.}
 
 
 
@@ -530,14 +581,7 @@ Let us define a set $\Delta$ of $k-1$, sub-meshes where each element $\delta_i =
 
 %\sout{In the appendix, we show an application of the mesh's setup on spheres obtained by two-powered order icosahedron's tessellation.}
 
-Finally, we suggest scaling the normalized base mesh by the scaling factor $mS$ to afford the maximal screen occupancy.
 
-\begin{equation}
-\label{eq:spacings}
-mS = min(spacing_x, spacing_y, spacing_z)
-\end{equation}
-
-where $spacing_x$, $spacing_y$, $spacing_z$ are the spacing between adjacent samples in the x-, y- and z-axis, respectively.
 
 
 %\subsection{Glyphs customization and GPU instancing}
@@ -545,7 +589,7 @@ where $spacing_x$, $spacing_y$, $spacing_z$ are the spacing between adjacent sam
 \label{ssec::glyph_attributes}
 %\todo[inline]{Reduce the number of draw calls using GPU instancing. Each glyph is an instance referenced by gl\_instanceID.}
 
-In order to render M glyphs with one draw call, we use GPU instancing. The same spherical mesh geometry is used and is instanced by the individual displacement vector and ODF samples.
+In order to render M glyphs with one draw call, we use GPU instancing. The selected $2^t$ tessellation order of the icosahedron is used as a base geometry and is instanced by the individual displacement vector and ODF samples.
 
 For $M$ visible voxels, we sent the displacement vectors as a per-instance attribute, which is computed as a function of the voxel coordinates $(i, j, k)$ as:
 
@@ -558,7 +602,7 @@ For $M$ visible voxels, we sent the displacement vectors as a per-instance attri
 
 
 
-Note that the detected voxel data returned by the display-aware algorithm are stored on a GPU's buffer. This data is used directly in the vertex shader, for the computation of the translation attribute.
+Note that the detected voxel data returned by the display-aware algorithm is stored on a GPU's buffer. This data is used directly in the vertex shader, for the computation of the translation attribute.
 
 %\sout{In this section, we show the data structures of the translation coordinates and ODF samples.}
 
@@ -582,9 +626,10 @@ Note that the detected voxel data returned by the display-aware algorithm are st
 %\sout{The traffic CPU-GPU that refers to the translation consists of sending a vector containing} \textcolor{blue}{the set of} P translation matrices as \todo{uniform array? Use the GPU/OpenGL vocabulary to make understanding easier.}\textcolor{red}{an attribute, which is unique for each spherical mesh instantiated}.
 %\subsubsection{ODFs}
 
-One can organize the $N$ ODF samples at the index $m$ as $[R_m(\bm{u_1}), R_m(\bm{u_2}), ..., R_m(\bm{u_{N-1}}), R_m(\bm{u_{N}})]^T$. Because of the symmetry of HARDI ODF, i.e. $R(\bm{u}) = R(-\bm{u})$, and the glyph vertices organization given in Section \ref{ssec::glyph_resolution}, the elements of each column are $[R_m(\bm{u_1}), R_m(-\bm{u_1}), ..., R_m(\bm{u_{N-1}}), R_m(-\bm{u_{N-1}})]^T$. Thus, we suggest  representing the vector $R(\bm{u})$ by $N/2$ scalar values $[R_m(\bm{u_1}), R_m(\bm{u_3}), ..., R_m(\bm{u_{N-3}})$, $R_m(\bm{u_{N-1}})]^T$, where each element $R_m(\bm{u}_{K})$ displaces the points $P_{2K-1}$ and its symmetric $P_{2K}$ on the $m$-th highest resolution sphere.
+One can organize the ODF samples at the index $m$ as as $N$-sized vector $[R_m(\bm{u_1}), R_m(\bm{u_2}), ..., R_m(\bm{u_{N-1}}), R_m(\bm{u_{N}})]^T$. Because of the symmetry of HARDI ODF, i.e. $R(\bm{u}) = R(-\bm{u})$, and the glyph vertices organization given in Section \ref{ssec::glyph_resolution}, the elements of each column are $[R_m(\bm{u_1}), R_m(-\bm{u_1}), ..., R_m(\bm{u_{N-1}}), R_m(-\bm{u_{N-1}})]^T$. Thus, we suggest  representing the vector $R(\bm{u})$ by $N/2$ scalar values $[R_m(\bm{u_1}), R_m(\bm{u_3}), ..., R_m(\bm{u_{N-3}})$, $R_m(\bm{u_{N-1}})]^T$, where each element $R_m(\bm{u}_{K})$ displaces the points $P_{2K-1}$ and its symmetric $P_{2K}$ on the $m$-th base spherical mesh.
 
-For the spherical mesh chosen, we setup the ODF data that is sent to GPU as a matrix $\bm{R}_{\frac{V}{2}xM}$ (Eq. \ref{eq::R}), where $V$ is the number of vertices of the chosen spherical mesh. The ODF samples consist in the first $V/2$ values of each ODF sample array to be rendered. $\bm{R}$ is sent to GPU as a 2D texture of RGBA format.
+
+For the base geometry chosen, we setup the ODF data that is sent to GPU as a matrix $\bm{R}_{\frac{V}{2}xM}$ (Eq. \ref{eq::R}), where $V$ is the number of vertices of the base geometry, given by $10 \times 4^t + 2$. The ODF samples consist in the first $V/2$ values of each ODF sample array to be rendered. Each $R_m(\bm{u})$ column refers to the ODF in the $m$-th visible voxel index, given by $d_m$. $\bm{R}$ is sent to GPU as a 2D texture of RGBA format.
 
 %\sout{The setup of the ODF data that is sent to GPU consists in a matrix $\bm{R}_{\frac{V}{2}xM}$ where it takes $V/2$ samples of ODF of the $M$ requested ODFs. $V$ is the amount of points of the chosen spherical mesh, according to the procedure described in subsection \ref{ssec::glyph_resolution}, and is contained in the set $\{N_1, N_2, ..., N_t, N\}$. Note that the data structure suggested for the spherical mesh, where a lower resolution sphere $(\Pi_K, I_k)$ is tessellated over the $N_K$ first vertices of $\Pi$ makes it possible to set ODF data with the first $N_K/2$ data. The layout of the $\bm{R}$ is in Eq. \ref{eq::R}:} 
 
@@ -615,7 +660,7 @@ Each texel in RGBA format supports four values. We further group the scalar valu
 
  %\sout{It is needed so that the first samples of an ODFs do not occupy the RGBA last values of its previous, and it says respect to the 2D texture allocation procedures.} 
  
- The ODF data are accessed in the vertex shader when each glyph instance $j$ is processed. All texels $K = \frac{Vertex\_ID}{8}$ in a column are accessed to get a group of 4 ODF values to displace 8 spherical mesh points. We use the function {\bf texelFetch} to directly access the ODF texture using unnormalized coordinates $(j, \frac{Vertex\_ID}{8})$.
+ The ODF data are accessed in the vertex shader when each glyph instance $j$ is processed. All texels $K = \frac{Vertex\_ID}{8}$ in a column are accessed to get a group of 4 ODF values to displace 8 spherical mesh points. We use the function {\bf texelFetch} to directly access the ODF texture using unnormalized coordinates $(j, \frac{Vertex\_ID}{8})$. The lookup of the ODF component to be used in the thread to deform its respective point the in the base geometry in the vertex shader is accessible by analyzing the remainder of Vertex\_ID's division by eight, as illustrated in Fig. \ref{fig::texelfetch}.
 
 %\sout{The columns of the matrix refer to a set of samples of one ODF, which can be accessed directly by the Instance\_ID.}
 
@@ -642,7 +687,7 @@ Each texel in RGBA format supports four values. We further group the scalar valu
 
 %!!Falar de forma generica por aqui?
 
-\section{Experiments and results}
+\section{Experiments, results and discussion}
 \label{sec::results}
 
 We designed an experiment to evaluate the time performance of our proposed ODF glyph rendering and integrated the rendering algorithm into a multimodal rendering environment to assess the enhancement in the conveyance of diffusion data to the superquadrics glyphs. Time measurements were performed on a Macbook Pro Retina 13' early 2015, with an Intel Core i5 Dual-Core 2.7GHz CPU, 8 GB RAM, and an Intel Iris 6100 GPU with 1536 MB of memory.
@@ -658,7 +703,7 @@ We measured the time performance in FPS of the multimodal rendering for ODF. The
 
 \begin{table}[]
 \begin{tabular}{cccc}
-\textbf{FPS} & \textbf{Scaling factor} & \textbf{\# glyphs} & \textbf{Tessellation Order} \\ \hline
+\textbf{FPS} & \textbf{Scaling factor} & \textbf{\# glyphs} & \textbf{\begin{tabular}[c]{@{}c@{}}Tessellation\\ Order\end{tabular}} \\ \hline
 34.24 & 59.16 & 16   & 16  \\
 34.58 & 39.57 & 30   & 16  \\
 34.72 & 23.41 & 64   & 8   \\
@@ -675,6 +720,28 @@ We measured the time performance in FPS of the multimodal rendering for ODF. The
 \caption{Glyphs information and FPS in a 800 x 800 image. The number of vertices and triangles of the $2^{nd}$, $4^{th}$, $8^{th}$ and $16^{th}$ tessellation order of the icosahedron are in Table \ref{tab::icosahedron_set}.}
 \label{tab::glyph_info_experiment}
 \end{table}
+
+\subsection{Discussion}
+\subsubsection{Comparison with Shattuck et al.'s approach}
+
+One may compare our approach with Shattuck et al.'s \cite{shattuck2008}, since both of them are based on polygons, where ODF samples deform a base spherical mesh. In their approach, the ODF samples were stored as coefficients of basis functions on CPU, the glyphs were computed on slices and their approach consisted on the computation of each glyph's surface points displacing ODF samples on a base spherical mesh on CPU, and then use commands to delimit a set of primitives to draw.
+
+On our approach, we set the base geometries a priori and store ODF data as samples and showed techniques to select the adequate base geometry, and strategies to handle the CPU-GPU data-traffic bottleneck. To achieve this goal, we showed a way of organizing the ODF and base geometry data to use instance rendering, which was not released at the time Shattuck et al. proposed the work. Furthermore, we deform the points of the base geometry on GPU's threads.
+
+In order to make a comparison between our and Shattuck et al.'s \cite{shattuck2008} approach when it comes to per-glyph CPU-GPU data traffic, lets consider a generic tessellation order of the icosahedron with N vertices, where each vertex is common to six triangles\footnote{The 12 vertices of the base icosahedron in the mesh are vertices of only five triangles, but for sake of demonstration simplicity, we won't take it into consideration}.
+
+Considering that Shattuck et al. \cite{shattuck2008} assembled quadrilaterals to form the glyphs surface, which is formed by two triangles, they send to GPU three copies of the same vertex of a point in the glyph's surface to form the glyph. This gives a total of $3\times N$ points sent to GPU, which corresponds to $9\times N$ floats, followed by an individual translation displacement and a drawing command.
+
+In our approach, the per-glyph data traffic is only related to ODF samples in a half-sphere, which corresponds to $N/2 + (-N/2 \mod{4})$ floats, in addition to its respective translation attribute, which is already on GPU. Thus, in our approach, we set the CPU-GPU data traffic to be 5-7\% of the amount of Shattuck et al.'s approach. Furthermore, the glyphs are rendered with one draw call.
+
+Since our approach is attached to a raycasted DWI volume and a voxel detection system, only the visible voxels are requested to be rendered and it is not restricted to a full slice. In the interactive visualization environment, where the user has the possibility of zooming and moving the scene, the voxel detection makes sure that off-screen voxels are not demanded to be processed in the vertex processing stage on GPU's pipeline to be further discarded in the rasterization.
+
+\subsubsection{Derived Applications}
+
+Our scheme can also be applicable to a slice based glyph rendering. Note that, instead of using the visible voxels set $D$, one can refer the index set to be rendered to refer to a full slice of size $W \times H$. Furthermore, instead of using the translation attributes to position the glyphs in the volume space, one may position the glyph to the center of each block in dimensions of a slice and scale it accordingly to the dimensions of the block.
+
+
+
 
 
  %The ODF data structures setup process in CPU is accelerated by using parallelism.

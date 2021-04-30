@@ -71,25 +71,25 @@ DCA/FEEC/University of Campinas,\\
 %1st line of address\\
 %2nd line of address\\
 Brazil\\[1mm]
-danielxs@dca.fee.unicamp.br
+danielxaviers@gmail.com
 }
 \hspace{0.05\textwidth}
 \parbox{0.25\textwidth}{\centering
-Second Author\\[1mm]
-author's affiliation\\
-1st line of address\\
-2nd line of address\\
-Country (ZIP) code, City, State\\[1mm]
-e@mail
+Raphael Voltoline\\[1mm]
+DCA/FEEC/University of Campinas,\\
+%1st line of address\\
+%2nd line of address\\
+Brazil\\[1mm]
+raphavoltoline.rvr@gmail.com
 }
 \hspace{0.05\textwidth}
 \parbox{0.25\textwidth}{\centering
-Third Author\\[1mm]
-author's affiliation\\
-1st line of address\\
-2nd line of address\\
-Country (ZIP) code, City, State\\[1mm]
-e@mail
+Wu Shin-Ting\\[1mm]
+DCA/FEEC/University of Campinas,\\
+%1st line of address\\
+%2nd line of address\\
+Brazil\\[1mm]
+ting@unicamp.br
 }
 }
 
@@ -154,9 +154,9 @@ medical imaging, HARDI, computer graphics, visualization.
 \vspace*{1.0\baselineskip}
 }]
 
-\todo[inline]{Is ODF a representation of HARDI data or a representation of a HARDI data processing tool?}
+%\todo[inline]{Is ODF a representation of HARDI data or a representation of a HARDI data processing tool?}
 
-\todo[inline]{In our approach ... you should }
+%\todo[inline]{In our approach ... you should }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
@@ -231,7 +231,7 @@ In this work, we present an interactive GPU-accelerated triangle-based rendering
 %\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
 %In this work, we present a\textcolor{blue}{n interactive GPU-accelerated} rendering scheme \sout{that aims to, given samples of ODFs associated with a spherical mesh, we} \textcolor{blue}{to} render a set of spherical polar plot\textcolor{blue}{s from ODF samples}. \textcolor{blue}{Inspired by Voltoline and Wu's work, we applied instance rendering and transform feedback to reduce the CPU-GPU data traffic.}\sout{The gains of performance are given by decreasing the amount of data traffic CPU-GPU by taking out redundant information on each drawing request. This is achieved by using instance rendering.}
 %\todo{is rendering necessary for visualization?}\sout{This rendering scheme, integrated with visualization systems to diffusion images, can be a powerful tool for researchers in the area to assess a set of local diffusion profiles and improve their understanding of advanced methods for diffusion imaging.}
-The paper is organized into six sections. In Section \ref{sec::related_work}, we discuss the related works; in Section \ref{sec:superquadric_rendering}, we briefly present the interactive multimodal rendering pipeline for superquadrics proposed by Voltoline and Wu; in Section \ref{sec::odf_glyph_rendering}, we discuss our proposed modifications to make their pipeline appropriate for ODF glyph rendering; in Section \ref{sec::results}, we show the rendering algorithm performance; and in Section \ref{sec::conclusions}, we conclude the work with discussion.
+The paper is organized into six sections. In Section \ref{sec::related_work}, we discuss the related works; in Section \ref{sec:superquadric_rendering}, we briefly present the interactive multimodal rendering pipeline for superquadrics proposed by Voltoline and Wu; in Section \ref{sec::odf_glyph_rendering}, we discuss our proposed modifications to make their pipeline appropriate for ODF glyph rendering; in Section \ref{sec::results}, we show visual results, and experiments that show the algorithm performance; and in Section \ref{sec::conclusions}, we conclude the work.
 
 \paragraph*{\textbf{Contributions}}
 
@@ -425,7 +425,7 @@ The second condition aims to make the glyph's base geometry adaptive as a sub-me
 
 The category of spherical meshes that we chose that satisfies the conditions stated are derived from the two-powered tessellation order of the icosahedron. The algorithm to obtain the $2^k$-th tessellation order is an iterative process repeated $k$ times that starts with an icosahedron. Each triangle is subdivided in four in each iteration, where the new vertices are computed as the projection of each median points of each pair of connected vertices onto the sphere. Thus, the $2^k$-th tessellation order vertices set contains all vertices of the anterior iterations, and, in addition to that, they are all symmetrical with respect to the origin. The algorithm to obtain this category of spherical mesh can be found in \cite{luna2012}.
 
-Therefore, assigning $(\Pi, I)$, $2^{k}$-th tessellation order of the icosahedron as the base geometry and keeping each index set at each iteration, we have a set of $k$ sub-meshes $(\Pi_0, I_0), (\Pi_1, I_1), ..., (\Pi_{k-1}, I_{k-1})$ as the $1^{st}$, $2^{nd}$, ... $2^{k-1}$-th tessellation order.
+Therefore, assigning $(\Pi, I)$, $2^{k}$-th tessellation order of the icosahedron as the base geometry and keeping each index set of the lower order of tessellation meshes at each iteration, we have a set of $k$ sub-meshes $(\Pi_0, I_0), (\Pi_1, I_1), ..., (\Pi_{k-1}, I_{k-1})$ as the $1^{st}$, $2^{nd}$, ... $2^{k-1}$-th tessellation order.
 
 %The vertices subset property can be corroborated by the fact that tessellation of order $2^k$ consists of a subdivision of each triangle of the $2^{k-1}$-th tessellation in four.
 
@@ -660,7 +660,7 @@ Each texel in RGBA format supports four values. We further group the scalar valu
 
  %\sout{It is needed so that the first samples of an ODFs do not occupy the RGBA last values of its previous, and it says respect to the 2D texture allocation procedures.} 
  
- The ODF data are accessed in the vertex shader when each glyph instance $j$ is processed. All texels $K = \frac{Vertex\_ID}{8}$ in a column are accessed to get a group of 4 ODF values to displace 8 spherical mesh points. We use the function {\bf texelFetch} to directly access the ODF texture using unnormalized coordinates $(j, \frac{Vertex\_ID}{8})$. The lookup of the ODF component to be used in the thread to deform its respective point in the base geometry in the vertex shader is accessible by analyzing the remainder of Vertex\_ID's division by eight, as illustrated in Fig. \ref{fig::texelfetch}.
+ The ODF data are accessed in the vertex shader when each glyph instance $j$ is processed. All texels $K = \frac{Vertex\_ID}{8}$ in a column are accessed to get a group of 4 ODF values to displace 8 spherical mesh points. We use the function {\bf texelFetch} to directly access the ODF texture using unnormalized coordinates $(j, \frac{Vertex\_ID}{8})$. The lookup of the ODF component to be used in the thread to deform its respective point in the base geometry in the vertex shader is accessible by analyzing the remainder of Vertex\_ID's division by eight, as illustrated in Fig. \ref{fig::texelfetch}. Moreover, one can also use the square brackets notation, for the R, G, B and A components mapped into the indices 0, 1, 2, and 3, respectively, the texel's index for the thread is given by $\lfloor (Vertex\_ID \mod{8})/2 \rfloor$.
 
 %\sout{The columns of the matrix refer to a set of samples of one ODF, which can be accessed directly by the Instance\_ID.}
 
@@ -693,9 +693,9 @@ Each texel in RGBA format supports four values. We further group the scalar valu
 
 We designed an experiment to evaluate the time performance and visual aspects of our proposed ODF glyph rendering integrated into the multimodal rendering environment to assess the enhancement in the conveyance of diffusion data to the superquadrics glyphs, and we also show an experiment that assess the glyph rendering on slices. Time measurements were performed on a Macbook Pro Retina 13' early 2015, with an Intel Core i5 Dual-Core 2.7GHz CPU, 8 GB RAM, and an Intel Iris 6100 GPU with 1536 MB of memory.
 
-The images generated in the experiments were collected as part of the WU-Minn HCP Retest Data by the Connectome Project Consortium \cite{essen2012}. The data used is a DWI and anatomical T1 MRI of an 22-35 years-old healthy woman.
+The images generated in the experiments were collected as part of the WU-Minn HCP Retest Data by the Connectome Project Consortium \cite{essen2012}. The data used is a DWI and anatomical T1-weighted MRI of a 22-35 years-old healthy woman.
 
-The diffusion data were acquired on a Siemens 3T Skyra scanner. The acquisition is multi-shell 90 diffusion weighting directions for each $b = 1000, 2000$ and $3000 s/mm^2$, and these directions are uniformly distributed in multiple q-space shells, and 6 $b0$ acquisitions for each shell. The data were preprocessed with the HCP diffusion preprocessing pipeline \cite{glasser2013}. The preprocessed acquisition has $145\times 174\times  145$ voxel grid, with sampling space of $1.25x1.25x1.25$mm.
+The diffusion data were acquired on a Siemens 3T Skyra scanner. The acquisition is multi-shell with 90 diffusion weighting directions for each $b = 1000, 2000$ and $3000 s/mm^2$, and these directions are uniformly distributed in multiple q-space shells, and 6 $b0$ acquisitions for each shell, giving a total off 288 images. The data were preprocessed with the HCP diffusion preprocessing pipeline \cite{glasser2013}. The preprocessed acquisition has $145\times 174\times  145$ voxel grid, with sampling space of $1.25x1.25x1.25$mm.
 
 %The diffusion data were acquired on a Siemens 3T Skyra scanner, the acquisition is multi-shell 90 diffusion weighting directions for each $b = 1000, 2000$ and $3000 s/mm^2$, these directions are uniformly distributed in multiple q-space shells, and 6 $b0$ acquisitions for each shell. The data were preprocessed with HCP diffusion preprocessing pipeline, which consisted of b0 intensity normalization across runs, EPI distortion correction, eddy-current-induced distortion correction, motion correction, gradient nonlinearity correction, registration to native structural space, and masking the final data with a brain mask \cite{glasser2013}. The preprocessed acquisition has $145\times 174\times  145$ voxel grid, with sampling space of $1.25x1.25x1.25$mm.
 
@@ -758,7 +758,7 @@ Voltoline and Wu \cite{voltoline2021} found evidence that their multimodal rende
 \subsection{Performance}
 
 
-We measured the time performance in FPS of the multimodal rendering for ODF. The number of glyphs is changed through the viewing scaling factor. The greater is the zoom factor, the smaller is the number of glyphs, the higher is each glyph's voxel screen occupancy, increasing their resolution. The output image's resolution is 850x850, and the number of visible glyphs varies between 16 and 6737. The glyphs' resolution varies from the $2^{nd}$ (the lowest level of detail, Figure \ref{fig::multimodal_lowres}) to the $16^{th}$ (the highest level of detail, Figure \ref{fig::multimodal_highres}) tessellation order of the icosahedron. The FPS of the rendering scheme, alongside the number of visible glyphs rendered, the base geometry used, and their respective scaling factors, are listed in Table \ref{tab::glyph_info_experiment}, where we attest that the scheme renders at interactive rates.
+We measured the time performance in FPS of the multimodal rendering for ODF. The number of glyphs is changed through the viewing scaling factor. The greater is the zoom factor, the smaller is the number of glyphs, the higher is each glyph's voxel screen occupancy, increasing their resolution. The output image's resolution is 850x850, and the number of visible glyphs varies between 12 and 13360. The glyphs' resolution varies from the $2^{nd}$ (the lowest level of detail, Figure \ref{fig::multimodal_lowres}) to the $8^{th}$ (the highest level of detail, Figure \ref{fig::multimodal_highres}) tessellation order of the icosahedron. The FPS of the rendering scheme, alongside the number of visible glyphs rendered, the base geometry used, and their respective scaling factors, are listed in Table \ref{tab::glyph_info_experiment}, where we attest that the scheme renders at interactive rates.
 
 \begin{table}[]
 \begin{tabular}{|cccc|}
@@ -776,16 +776,17 @@ We measured the time performance in FPS of the multimodal rendering for ODF. The
 17.92 & 1.51  & 13360  & 2 \\
 \hline
 \end{tabular}
-\caption{Glyph Information in image 850 x 850. The number of vertices and triangles of the mesh used is in Table \ref{tab::icosahedron_set}.}
+\caption{Glyph Information in image 850 x 850. The number of vertices and triangles of the base geometry used is in Table \ref{tab::icosahedron_set}.}
 \label{tab::glyph_info_experiment}
 \end{table}
 
-\subsection{Slice Rendering}
+\subsection{Discussion}
 %\subsubsection{Comparison with Shattuck et al.'s approach}
 
 One may compare our approach with Shattuck et al.'s \cite{shattuck2008}, since both of them are based on polygons, where ODF samples deform a base spherical mesh. In their approach, each ODF was stored as coefficients of base functions on CPU and the glyph shapes were computed on slices. Thus, the computation of each glyph's shape consisted in the computation of the displacement of each vertex in the base spherical mesh using its base function on CPU, and the CPU-GPU data traffic consisted on setting a polygon with its vertex data as a function of the ODF on the base geometry and send the shape's vertex data to GPU and then use commands to delimit a set of primitives to draw.
 
-On our approach, we set the base geometries a priori and store ODF data as samples and showed techniques to select the adequate base geometry, and strategies to handle the CPU-GPU data-traffic bottleneck. To achieve this goal, we showed a way of organizing the ODF and base geometry data to use instance rendering, which was not released at the time Shattuck et al. proposed their work. Furthermore, in the rendering process, we only send to GPU a set of ODF scalar values to displace the base geometry and we deform its points on GPU's threads on each instance. Thus, the per-glyph CPU-GPU data traffic consists $N/2 + (-N/2 \mod{4})$ floats for a base geometry with $N$ vertices, and these values are disposed sequentially, so we can take advantage on GPU's cache. The possibility to decrease the traffic to this amount has been crucial to render these glyphs with fine meshes at interactive rates. Furthermore, the glyphs are rendered with one draw call and the maximum amount of glyphs are limited to the maximum amount of elements allowed on a single texture.
+On our approach, we set the base geometries a priori and store ODF data as samples and showed techniques to select the adequate base geometry, and strategies to handle the CPU-GPU data-traffic bottleneck. To achieve this goal, we showed a way of organizing the ODF and base geometry data to use instance rendering, which was not released at the time Shattuck et al. proposed their work. Furthermore, in the rendering process, we only send to GPU a set of ODF scalar values to displace the base geometry and we deform its points on GPU's threads on each instance. Thus, the per-glyph CPU-GPU data traffic consists $N/2 + (-N/2 \mod{4})$ floats for a base geometry with $N$ vertices. The possibility to decrease the traffic to this amount has been crucial to render these glyphs with fine meshes at interactive rates. Furthermore, the glyphs are rendered with one draw call and the maximum amount of glyphs are limited to the maximum amount of elements allowed on a single texture.
+%DO WE MENTION THE GPU CACHE USE BY SENDING DATA IN SEQUENCE?
 
 %In order to make a comparison between our and Shattuck et al.'s \cite{shattuck2008} approach when it comes to per-glyph CPU-GPU data traffic, lets consider a generic tessellation order of the icosahedron with N vertices, where each vertex is common to six triangles\footnote{The 12 vertices of the base icosahedron in the mesh are vertices of only five triangles, but for sake of demonstration simplicity, we won't take it into consideration}.
 
@@ -795,11 +796,11 @@ On our approach, we set the base geometries a priori and store ODF data as sampl
 
 Since our approach is attached to a raycasted DWI volume and a voxel detection algorithm, only the visible voxels are requested to be rendered and it is not restricted to a full slice. Moreover, in the interactive visualization environment, where the user has the possibility of zooming and moving the scene, the voxel detection makes sure that off-screen voxels' ODF coefficients are not sent to GPU and demanded to be processed in the vertex processing stage on GPU's pipeline to be further discarded in rasterization.
 
-%\subsubsection{Derived Applications}
+\subsubsection{Slice rendering}
 
 Our scheme can also be applicable to a slice-based glyph rendering. Note that, instead of using the visible voxels set $D$, one can refer the index set to be rendered that refers to a full slice of size $W \times H$. Furthermore, instead of using the translation attributes to place the glyphs in the volume space, one may position the glyph to the center of each block, computed by the subdivision of the scene in rectangles by the dimensions of the slice in dimensions of a slice and scale it accordingly to the dimensions of the block and use instance rendering.
 
-In order to give some performance results of the presented rendering algorithm on 2D-slice rendering, we made the following experiment: the x and y axis is divided in $S$ intervals each ($S = W = H$), giving a grid with $S^2$ equally sized squared regions, which have glyphs rendered in each one of them. Each glyph is scaled to fit in its respective square and placed at its center. The base geometry is fixed, and the translation attributes and the ODF samples matrix in each drawing request is updated and sent to GPU as described in subsection \ref{ssec::glyph_attributes}. We measured the FPS as a function of the amount rendered of glyphs with the $S$ varying until 100. The graphical representation is annotated in Fig. \ref{fig::slice_benchmark} for different base geometries used.
+In order to give some performance results of the presented rendering algorithm on 2D-slice rendering, we made the following experiment: the x and y axis is divided in $S$ equal intervals each ($S = W = H$), giving a grid with $S^2$ equally sized squared regions, which have glyphs rendered in each one of them. Each glyph is scaled to fit in its respective square and placed at its center. The base geometry is fixed, and the translation attributes and the ODF samples matrix in each drawing request is updated and sent to GPU as described in subsection \ref{ssec::glyph_attributes}. We measured the FPS as a function of the amount rendered of glyphs with $S$ varying until 100. The graphical representation is annotated in Fig. \ref{fig::slice_benchmark} for different base geometries used.
 
 \begin{figure}[ht]
     \centering
